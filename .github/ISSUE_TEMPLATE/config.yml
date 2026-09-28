@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a vulnerability
+    url: https://github.com/misiektoja/go-composite-mldsa/security/advisories/new
+    about: Report privately through GitHub. Never open a public issue for a suspected vulnerability.
+  - name: Package documentation
+    url: https://pkg.go.dev/github.com/misiektoja/go-composite-mldsa
+    about: Every exported type and function, with examples.
+  - name: Question or idea
+    url: https://github.com/misiektoja/go-composite-mldsa/discussions
+    about: Ask about usage or discuss an approach before opening an issue.

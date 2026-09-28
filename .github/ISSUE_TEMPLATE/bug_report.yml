@@ -1,0 +1,53 @@
+name: Bug report
+description: A signature, key or certificate does not verify, does not match the draft or does not interoperate
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report a suspected vulnerability here. Follow [SECURITY.md](https://github.com/misiektoja/go-composite-mldsa/blob/main/SECURITY.md) instead.
+
+        Never paste a private key that protects anything real into an issue. Generate a fresh key to reproduce the problem.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected and what you got instead. Cite the draft section when the library deviates from it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The algorithm, the function you called and a minimal program.
+      render: go
+    validations:
+      required: true
+
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Artifacts and error output
+      description: The error text and, for an interoperability problem, the PEM certificate, request, public key or signature that fails.
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: go-composite-mldsa version
+      placeholder: v0.1.0 or commit
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Go version and other implementation
+      placeholder: go1.27.1, Bouncy Castle 1.86
+    validations:
+      required: true
