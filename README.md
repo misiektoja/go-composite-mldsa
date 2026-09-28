@@ -1,5 +1,6 @@
 # go-composite-mldsa
 
+[![GitHub Release](https://img.shields.io/github/v/release/misiektoja/go-composite-mldsa?style=flat-square&color=blue)](https://github.com/misiektoja/go-composite-mldsa/releases)
 [![Go Reference](https://pkg.go.dev/badge/github.com/misiektoja/go-composite-mldsa.svg)](https://pkg.go.dev/github.com/misiektoja/go-composite-mldsa)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 [![Tests](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/test.yml)
