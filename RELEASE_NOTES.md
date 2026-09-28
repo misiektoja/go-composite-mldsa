@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## [0.1.0] - TBD
+## [0.1.0] - 2026-09-28
 
 The first release of **go-composite-mldsa**, a Go library for **post-quantum composite ML-DSA** signatures as specified in draft-ietf-lamps-pq-composite-sigs-19.
 
