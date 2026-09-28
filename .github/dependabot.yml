@@ -1,0 +1,66 @@
+# Keeps dependencies current without letting updates arrive faster than they can be reviewed.
+#
+# The library itself has no Go dependencies. Dependabot still watches both modules so a dependency
+# added later is covered. The Bouncy Castle jars are pinned by version and digest in the Makefile
+# and are updated by hand.
+version: 2
+
+updates:
+  - package-ecosystem: gomod
+    directories:
+      - "/"
+      - "/interop"
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      go-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  # The documentation toolchain is pinned in docs/requirements.txt and the site build runs with
+  # --strict, so a MkDocs or theme release that changes a warning into an error breaks the build. That
+  # is worth learning from a pull request rather than from the first push after a release.
+  - package-ecosystem: pip
+    directory: "/docs"
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      docs-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch

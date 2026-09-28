@@ -1,0 +1,55 @@
+name: Interoperability
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+  schedule:
+    # A weekly run keeps the Bouncy Castle comparison current with the runner's Java.
+    - cron: "29 5 * * 1"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bouncycastle:
+    name: Bouncy Castle in both directions
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.mod
+            interop/go.mod
+
+      # The verifier runs as a single-file Java program, so only a JDK is needed and no build tool.
+      - name: Setup Java
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "27"
+
+      - name: Check module files
+        run: make tidy-check
+
+      # The Make target downloads the pinned Bouncy Castle jars from Maven Central and refuses any
+      # jar whose SHA-256 digest differs from the one recorded in the Makefile.
+      - name: Run the interoperability tests
+        env:
+          TEST_SCRATCH: ${{ runner.temp }}/tests
+        run: make test-interop
