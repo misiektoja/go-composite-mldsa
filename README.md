@@ -5,6 +5,7 @@
 [![Tests](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/test.yml)
 [![Interoperability](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/interop.yml/badge.svg?branch=main)](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/interop.yml)
 [![Supply chain](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/supply-chain.yml/badge.svg?branch=main)](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/supply-chain.yml)
+[![OpenSSF Scorecard](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.scorecard.dev%2Fprojects%2Fgithub.com%2Fmisiektoja%2Fgo-composite-mldsa&query=%24.score&label=openssf%20scorecard&style=flat-square)](https://scorecard.dev/viewer/?uri=github.com/misiektoja/go-composite-mldsa)
 
 go-composite-mldsa is a Go library for **post-quantum composite ML-DSA** signatures as specified in
 [draft-ietf-lamps-pq-composite-sigs-19](https://datatracker.ietf.org/doc/draft-ietf-lamps-pq-composite-sigs/19/).
