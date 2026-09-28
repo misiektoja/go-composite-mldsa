@@ -49,7 +49,16 @@ func ParsePKIXPublicKey(der []byte) (*PublicKey, error) {
 	if spki.PublicKey.BitLength != 8*len(spki.PublicKey.Bytes) {
 		return nil, errors.New("compositemldsa: public key BIT STRING has unused bits")
 	}
-	return NewPublicKey(alg, spki.PublicKey.Bytes)
+	pk, err := NewPublicKey(alg, spki.PublicKey.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	// encoding/asn1 ignores extra elements at the end of a SEQUENCE, so only the one DER encoding
+	// of the key is accepted.
+	if canonical, err := MarshalPKIXPublicKey(pk); err != nil || !bytes.Equal(canonical, der) {
+		return nil, errors.New("compositemldsa: SubjectPublicKeyInfo is not DER encoded")
+	}
+	return pk, nil
 }
 
 // Encodes the private key as a DER PKCS #8 PrivateKeyInfo with parameters absent.

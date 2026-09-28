@@ -128,7 +128,7 @@ func messageRepresentative(alg Algorithm, message []byte, context string, hash c
 			len(message), preHash, preHash.Size())
 	}
 	label := alg.label()
-	out := make([]byte, 0, len(prefix)+len(label)+1+len(context)+len(messageDigest))
+	out := make([]byte, 0, len(prefix)+len(label)+1+len(context)+preHash.Size())
 	out = append(out, prefix...)
 	out = append(out, label...)
 	out = append(out, byte(len(context))) //nolint:gosec // The length was checked against maxContextSize above.

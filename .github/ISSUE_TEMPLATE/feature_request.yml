@@ -1,0 +1,33 @@
+name: Feature request
+description: Ask for an algorithm, an encoding or an API that go-composite-mldsa does not have yet
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The [algorithm reference](https://misiektoja.github.io/go-composite-mldsa/reference/algorithms/) lists the supported combinations and why the others are missing.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: The integration problem, not the implementation you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would solve it
+      description: The behavior, function or algorithm you would like. Name the draft or RFC section when the request concerns the construction or an encoding.
+    validations:
+      required: true
+
+  - type: input
+    id: counterpart
+    attributes:
+      label: Other implementation this concerns
+      placeholder: Bouncy Castle 1.86, OpenSSL, EJBCA, other
+    validations:
+      required: false

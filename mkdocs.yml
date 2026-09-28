@@ -1,0 +1,68 @@
+site_name: go-composite-mldsa
+site_description: A Go library for composite ML-DSA signatures and certificates
+site_url: https://misiektoja.github.io/go-composite-mldsa/
+repo_url: https://github.com/misiektoja/go-composite-mldsa
+repo_name: misiektoja/go-composite-mldsa
+copyright: Copyright the go-composite-mldsa Authors, licensed under Apache-2.0
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+# The pip requirements file lives next to the pages for Dependabot but is not a page.
+exclude_docs: requirements.txt
+
+# The documentation build runs with --strict so every one of these findings fails the build.
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+markdown_extensions:
+  - admonition
+  # Code listings are included from the repository so the pages and the examples cannot drift.
+  - pymdownx.snippets:
+      base_path: [.]
+      check_paths: true
+  - toc:
+      permalink: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Overview: index.md
+  - Getting started: getting-started.md
+  - Guides:
+      - Keys and encodings: guide/keys.md
+      - Signatures: guide/signatures.md
+      - Certificates, requests and CRLs: guide/certificates.md
+  - Reference:
+      - Algorithms: reference/algorithms.md
+      - Compatibility policy: reference/compatibility.md
+  - Interoperability:
+      - Tested implementations: interoperability/tested-implementations.md
+  - Security:
+      - Security model: security/security-model.md
+  - Development:
+      - Development: development/development.md
+      - Testing: development/testing.md
+      - Release process: development/release-process.md
+  - Known limitations: known-limitations.md
