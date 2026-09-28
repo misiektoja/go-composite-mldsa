@@ -1,0 +1,57 @@
+version: "2"
+run:
+  allow-parallel-runners: true
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - copyloopvar
+    - dupl
+    - errcheck
+    - errorlint
+    - exhaustive
+    - gocritic
+    - goconst
+    - gocyclo
+    - gosec
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - modernize
+    - nakedret
+    - noctx
+    - prealloc
+    - revive
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+  settings:
+    revive:
+      rules:
+        - name: comment-spacings
+        - name: import-shadowing
+  exclusions:
+    generated: lax
+    rules:
+      # Function declarations stay on one physical line.
+      - linters:
+          - lll
+        source: '^func '
+      # Test code ignores errors, repeats setup and repeats literals on purpose.
+      - linters:
+          - dupl
+          - errcheck
+          - goconst
+          - gosec
+          - lll
+        path: _test\.go$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/misiektoja/go-composite-mldsa
