@@ -1,6 +1,6 @@
 # go-composite-mldsa
 
-go-composite-mldsa is a Go library for composite ML-DSA signatures as specified in
+go-composite-mldsa is a Go library for **post-quantum composite ML-DSA** signatures as specified in
 [draft-ietf-lamps-pq-composite-sigs-19](https://datatracker.ietf.org/doc/draft-ietf-lamps-pq-composite-sigs/19/).
 
 ML-DSA is the post-quantum signature algorithm of FIPS 204. It is new and many operators do not
