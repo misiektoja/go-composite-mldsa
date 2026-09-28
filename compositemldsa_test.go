@@ -392,7 +392,12 @@ func TestPKIXEncodings(t *testing.T) {
 	prototype.Algorithm.Algorithm = asn1.ObjectIdentifier{2, 16, 840, 1, 114027, 80, 9, 1, 5}
 	unusedBits := info
 	unusedBits.PublicKey.BitLength--
-	for name, v := range map[string]any{"NULL parameters": withNull, "prototype OID": prototype, "unused bits": unusedBits} {
+	extraElement := struct {
+		Algorithm pkix.AlgorithmIdentifier
+		PublicKey asn1.BitString
+		Extra     asn1.RawValue
+	}{info.Algorithm, info.PublicKey, asn1.NullRawValue}
+	for name, v := range map[string]any{"NULL parameters": withNull, "prototype OID": prototype, "unused bits": unusedBits, "an extra element": extraElement} {
 		der, err := asn1.Marshal(v)
 		if err != nil {
 			t.Fatal(err)
