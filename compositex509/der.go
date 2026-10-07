@@ -60,8 +60,7 @@ func sequence(elements ...[]byte) ([]byte, error) {
 	return asn1.Marshal(asn1.RawValue{Class: asn1.ClassUniversal, Tag: asn1.TagSequence, IsCompound: true, Bytes: body})
 }
 
-// Splits a DER certificate, request or revocation list into its signed part, signature algorithm
-// and signature value.
+// Return the signed content and algorithm from a three-element signed structure.
 func signedParts(der []byte) (tbs, algorithm []byte, err error) {
 	elements, err := sequenceElements(der)
 	if err != nil {
