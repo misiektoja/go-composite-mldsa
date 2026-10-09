@@ -2,7 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
-## [0.1.0] - 2026-09-28
+## [0.2.0] - 9 Oct 2026
+
+This release adds a lookup by algorithm name, tightens PKCS #8 parsing and fixes the nil key returned by the `compositex509` parsers on errors. The library now needs **Go 1.27.2** or newer, which fixes standard library vulnerabilities found in Go 1.27.1.
+
+### Signatures
+
+* **`AlgorithmFromName`** - Looks up an algorithm by its draft name, such as `MLDSA65-ECDSA-P256-SHA512`. This is the name `Algorithm.String` returns, so a stored name can be turned back into an `Algorithm`.
+* **Stricter PKCS #8 parsing** - `ParsePKCS8PrivateKey` rejects keys with malformed attributes, an empty or malformed public key or elements after the public key. Well-formed attributes are still accepted and discarded.
+
+### Certificates
+
+* **Nil key on parse errors** - `compositex509.ParsePKIXPublicKey` and `compositex509.ParsePKCS8PrivateKey` return a nil key whenever they return an error. Before, a failed composite parse returned a non-nil interface that held a nil pointer.
+
+## [0.1.0] - 28 Sep 2026
 
 The first release of **go-composite-mldsa**, a Go library for **post-quantum composite ML-DSA** signatures as specified in draft-ietf-lamps-pq-composite-sigs-19.
 
