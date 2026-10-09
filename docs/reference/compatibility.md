@@ -42,5 +42,7 @@ reason. Patch releases keep the API.
 ## Go version
 
 The module declares the minimum Go version in `go.mod`. Every release is built and tested with
-exactly that toolchain. Go 1.27.1 is the first version whose `crypto/mldsa`, `crypto/x509` and
-`crypto.MessageSigner` support everything the library needs.
+exactly that toolchain, so the minimum moves to a newer Go patch release when that release fixes a
+vulnerability `govulncheck` finds in the module or its example. Go 1.27.1 is the first version
+whose `crypto/mldsa`, `crypto/x509` and `crypto.MessageSigner` support everything the library
+needs. The minimum is Go 1.27.2, which fixed such a vulnerability in `os`.

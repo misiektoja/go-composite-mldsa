@@ -39,7 +39,7 @@ The library has two packages and no dependencies outside the Go standard library
 go get github.com/misiektoja/go-composite-mldsa
 ```
 
-The module needs Go 1.27.1 or newer.
+The module needs Go 1.27.2 or newer.
 
 ```go
 import (
