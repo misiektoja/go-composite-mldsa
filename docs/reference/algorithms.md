@@ -2,7 +2,8 @@
 
 The library implements the 15 draft-19 algorithms whose components the Go standard library
 provides. Names match the draft and Bouncy Castle. OIDs are under `id-alg` (1.3.6.1.5.5.7.6) and
-were allocated early by IANA, according to section 8.1.2 of the draft.
+were allocated early by IANA, according to section 8.1.2 of the draft. `Algorithm.String` returns
+the name. `AlgorithmFromName` and `AlgorithmFromOID` map a name or OID back to the constant.
 
 | Constant | Name | OID | Pre-hash | Traditional component |
 | --- | --- | --- | --- | --- |
@@ -68,4 +69,5 @@ Check that every relying party supports the algorithm before issuing with it.
 | MLDSA87-ECDSA-brainpoolP384r1-SHA512 | 1.3.6.1.5.5.7.6.50 | No Brainpool curves in the Go standard library |
 | MLDSA87-Ed448-SHAKE256 | 1.3.6.1.5.5.7.6.51 | No Ed448 in the Go standard library |
 
-`AlgorithmFromOID` reports false for these OIDs. Parsing a key or signature that uses them fails.
+`AlgorithmFromOID` and `AlgorithmFromName` report false for these algorithms. Parsing a key or
+signature that uses them fails.

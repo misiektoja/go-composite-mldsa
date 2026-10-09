@@ -27,9 +27,10 @@ reason. Patch releases keep the API.
 * **Algorithms may be added.** `Algorithms()` may return more entries, for example once the
   standard library gains Brainpool or Ed448. Switch statements over `Algorithm` need a default case.
 * **Algorithm values are not stable identifiers.** Store the OID or the name, never the integer
-  value of an `Algorithm`.
+  value of an `Algorithm`. `AlgorithmFromOID` and `AlgorithmFromName` read them back.
 * **`Options` may gain fields.** Construct it with field names.
-* **Parsing may become stricter** when the draft tightens a rule. The release notes name the change.
+* **Parsing may become stricter**, for example when the draft tightens a rule. The release notes
+  name the change.
 
 ## Upgrading
 
