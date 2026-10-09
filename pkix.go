@@ -14,14 +14,23 @@ type subjectPublicKeyInfo struct {
 	PublicKey asn1.BitString
 }
 
-// RFC 5958 OneAsymmetricKey. Version 0 is PrivateKeyInfo and may not carry the public key.
+// RFC 5958 OneAsymmetricKey. Version 0 is PrivateKeyInfo and may not carry the public key. The
+// public key stays raw so that an empty BIT STRING is told apart from an absent one.
 type oneAsymmetricKey struct {
 	Version    int
 	Algorithm  pkix.AlgorithmIdentifier
 	PrivateKey []byte
-	Attributes asn1.RawValue  `asn1:"optional,tag:0"`
-	PublicKey  asn1.BitString `asn1:"optional,tag:1"`
+	Attributes asn1.RawValue `asn1:"optional,tag:0"`
+	PublicKey  asn1.RawValue `asn1:"optional,tag:1"`
 }
+
+// RFC 5912 Attribute, a type and a non-empty SET of values of any type.
+type attribute struct {
+	Type   asn1.ObjectIdentifier
+	Values asn1.RawValue
+}
+
+var errMalformedAttributes = errors.New("compositemldsa: malformed PKCS #8 attributes")
 
 // Encodes the public key as a DER SubjectPublicKeyInfo with parameters absent.
 func MarshalPKIXPublicKey(pk *PublicKey) ([]byte, error) {
@@ -73,7 +82,8 @@ func MarshalPKCS8PrivateKey(sk *PrivateKey) ([]byte, error) {
 }
 
 // Decodes a DER PKCS #8 PrivateKeyInfo or OneAsymmetricKey that holds a composite private key. An
-// included public key must match the private key.
+// included public key must match the private key. Attributes must be well formed and are
+// discarded. Elements after the public key are rejected.
 func ParsePKCS8PrivateKey(der []byte) (*PrivateKey, error) {
 	var key oneAsymmetricKey
 	if rest, err := asn1.Unmarshal(der, &key); err != nil {
@@ -81,12 +91,20 @@ func ParsePKCS8PrivateKey(der []byte) (*PrivateKey, error) {
 	} else if len(rest) != 0 {
 		return nil, errors.New("compositemldsa: trailing data after PKCS #8")
 	}
-	hasPublicKey := key.PublicKey.BitLength != 0 || len(key.PublicKey.Bytes) != 0
+	// encoding/asn1 ignores extra elements at the end of a SEQUENCE. The raw fields re-encode
+	// verbatim, so a difference means the input had such elements.
+	if canonical, err := asn1.Marshal(key); err != nil || !bytes.Equal(canonical, der) {
+		return nil, errors.New("compositemldsa: PKCS #8 is not DER encoded")
+	}
+	hasPublicKey := len(key.PublicKey.FullBytes) != 0
 	switch {
 	case key.Version != 0 && key.Version != 1:
 		return nil, fmt.Errorf("compositemldsa: unsupported PKCS #8 version %d", key.Version)
 	case key.Version == 0 && hasPublicKey:
 		return nil, errors.New("compositemldsa: PKCS #8 version 0 cannot carry a public key")
+	}
+	if err := checkAttributes(key.Attributes); err != nil {
+		return nil, err
 	}
 	alg, err := algorithmFromIdentifier(key.Algorithm)
 	if err != nil {
@@ -96,11 +114,51 @@ func ParsePKCS8PrivateKey(der []byte) (*PrivateKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	matches := key.PublicKey.BitLength == 8*len(key.PublicKey.Bytes) && bytes.Equal(key.PublicKey.Bytes, sk.pub.encoded)
-	if hasPublicKey && !matches {
-		return nil, errors.New("compositemldsa: PKCS #8 public key does not match the private key")
+	if hasPublicKey {
+		var publicKey asn1.BitString
+		if rest, err := asn1.UnmarshalWithParams(key.PublicKey.FullBytes, &publicKey, "tag:1"); err != nil || len(rest) != 0 {
+			return nil, errors.New("compositemldsa: malformed PKCS #8 public key")
+		}
+		if publicKey.BitLength != 8*len(publicKey.Bytes) || !bytes.Equal(publicKey.Bytes, sk.pub.encoded) {
+			return nil, errors.New("compositemldsa: PKCS #8 public key does not match the private key")
+		}
 	}
 	return sk, nil
+}
+
+// Checks that PKCS #8 attributes are a SET OF Attribute as RFC 5958 defines them. An absent field
+// passes.
+func checkAttributes(attributes asn1.RawValue) error {
+	if len(attributes.FullBytes) == 0 {
+		return nil
+	}
+	if !attributes.IsCompound {
+		return errMalformedAttributes
+	}
+	for rest := attributes.Bytes; len(rest) > 0; {
+		element := rest
+		var attr attribute
+		var err error
+		if rest, err = asn1.Unmarshal(rest, &attr); err != nil {
+			return errMalformedAttributes
+		}
+		element = element[:len(element)-len(rest)]
+		values := attr.Values
+		if values.Class != asn1.ClassUniversal || values.Tag != asn1.TagSet || !values.IsCompound || len(values.Bytes) == 0 {
+			return errMalformedAttributes
+		}
+		for body := values.Bytes; len(body) > 0; {
+			var value asn1.RawValue
+			if body, err = asn1.Unmarshal(body, &value); err != nil {
+				return errMalformedAttributes
+			}
+		}
+		// Rejects elements after the values, which encoding/asn1 would ignore.
+		if again, err := asn1.Marshal(attr); err != nil || !bytes.Equal(again, element) {
+			return errMalformedAttributes
+		}
+	}
+	return nil
 }
 
 // Maps an algorithm identifier to a supported algorithm. Parameters must be absent, as section 5.3

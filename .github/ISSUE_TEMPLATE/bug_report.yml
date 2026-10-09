@@ -48,6 +48,6 @@ body:
     id: environment
     attributes:
       label: Go version and other implementation
-      placeholder: go1.27.1, Bouncy Castle 1.86
+      placeholder: go1.27.2, Bouncy Castle 1.86
     validations:
       required: true

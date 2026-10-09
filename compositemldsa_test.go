@@ -65,6 +65,9 @@ func TestAlgorithmMetadata(t *testing.T) {
 		if got, ok := compositemldsa.AlgorithmFromOID(want); !ok || got != alg {
 			t.Errorf("AlgorithmFromOID(%s) = %s, %v", want, got, ok)
 		}
+		if got, ok := compositemldsa.AlgorithmFromName(alg.String()); !ok || got != alg {
+			t.Errorf("AlgorithmFromName(%q) = %s, %v", alg.String(), got, ok)
+		}
 		wantHash := crypto.SHA512
 		if strings.HasSuffix(alg.String(), "-SHA256") {
 			wantHash = crypto.SHA256
@@ -86,6 +89,20 @@ func TestAlgorithmMetadata(t *testing.T) {
 	} {
 		if alg, ok := compositemldsa.AlgorithmFromOID(oid); ok {
 			t.Errorf("AlgorithmFromOID(%s) = %s", oid, alg)
+		}
+	}
+	// Names of unsupported algorithms, OID names and other spellings are not accepted.
+	for _, name := range []string{
+		"",
+		"MLDSA65-ECDSA-brainpoolP256r1-SHA512",
+		"MLDSA87-Ed448-SHAKE256",
+		"id-MLDSA65-ECDSA-P256-SHA512",
+		"mldsa65-ecdsa-p256-sha512",
+		" MLDSA65-ECDSA-P256-SHA512",
+		"unknown composite ML-DSA algorithm",
+	} {
+		if alg, ok := compositemldsa.AlgorithmFromName(name); ok {
+			t.Errorf("AlgorithmFromName(%q) = %s", name, alg)
 		}
 	}
 	var zero compositemldsa.Algorithm
@@ -458,5 +475,124 @@ func TestPKIXEncodings(t *testing.T) {
 	}
 	if _, err := compositemldsa.MarshalPKCS8PrivateKey(nil); err == nil {
 		t.Error("MarshalPKCS8PrivateKey accepted a nil key")
+	}
+}
+
+// PKCS #8 keys are parsed as strictly as SubjectPublicKeyInfo. Well-formed RFC 5958 attributes are
+// accepted and discarded.
+func TestPKCS8Strictness(t *testing.T) {
+	sk := vectorKey(t, compositemldsa.MLDSA44Ed25519SHA512)
+	pkcs8, err := compositemldsa.MarshalPKCS8PrivateKey(sk)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Every optional field is raw, so a case can place any encoding in it.
+	type rawKey struct {
+		Version    int
+		Algorithm  pkix.AlgorithmIdentifier
+		PrivateKey []byte
+		Attributes asn1.RawValue `asn1:"optional"`
+		PublicKey  asn1.RawValue `asn1:"optional"`
+		Extra      asn1.RawValue `asn1:"optional"`
+	}
+	var base rawKey
+	if _, err := asn1.Unmarshal(pkcs8, &base); err != nil {
+		t.Fatal(err)
+	}
+	mustMarshal := func(v any) []byte {
+		t.Helper()
+		der, err := asn1.Marshal(v)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return der
+	}
+	type attribute struct {
+		Type   asn1.ObjectIdentifier
+		Values asn1.RawValue
+	}
+	set := func(values ...[]byte) asn1.RawValue {
+		return asn1.RawValue{Class: asn1.ClassUniversal, Tag: asn1.TagSet, IsCompound: true, Bytes: bytes.Join(values, nil)}
+	}
+	friendlyName := asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 20}
+	value := mustMarshal("composite")
+	valid := mustMarshal(attribute{friendlyName, set(value)})
+	attributes := func(content ...[]byte) asn1.RawValue {
+		return asn1.RawValue{Class: asn1.ClassContextSpecific, Tag: 0, IsCompound: true, Bytes: bytes.Join(content, nil)}
+	}
+	publicKey := func(bits []byte, unused byte) asn1.RawValue {
+		return asn1.RawValue{Class: asn1.ClassContextSpecific, Tag: 1, Bytes: append([]byte{unused}, bits...)}
+	}
+	with := func(edit func(*rawKey)) []byte {
+		k := base
+		edit(&k)
+		return mustMarshal(k)
+	}
+
+	accepted := map[string][]byte{
+		"an attribute":           with(func(k *rawKey) { k.Attributes = attributes(valid) }),
+		"two attributes":         with(func(k *rawKey) { k.Attributes = attributes(valid, valid) }),
+		"an empty attribute set": with(func(k *rawKey) { k.Attributes = attributes() }),
+		"an attribute and the public key": with(func(k *rawKey) {
+			k.Version = 1
+			k.Attributes = attributes(valid)
+			k.PublicKey = publicKey(sk.PublicKey().Bytes(), 0)
+		}),
+	}
+	for name, der := range accepted {
+		if parsed, err := compositemldsa.ParsePKCS8PrivateKey(der); err != nil || !parsed.Equal(sk) {
+			t.Errorf("ParsePKCS8PrivateKey rejected %s: %v", name, err)
+		}
+	}
+
+	extraInAttribute := mustMarshal(struct {
+		Type   asn1.ObjectIdentifier
+		Values asn1.RawValue
+		Extra  asn1.RawValue
+	}{friendlyName, set(value), asn1.NullRawValue})
+	sequenceOfValues := mustMarshal(struct {
+		Type   asn1.ObjectIdentifier
+		Values []asn1.RawValue
+	}{friendlyName, []asn1.RawValue{{FullBytes: value}}})
+	rejected := map[string][]byte{
+		"an element after the private key": with(func(k *rawKey) { k.Extra = asn1.NullRawValue }),
+		"an element after the public key": with(func(k *rawKey) {
+			k.Version = 1
+			k.PublicKey = publicKey(sk.PublicKey().Bytes(), 0)
+			k.Extra = asn1.NullRawValue
+		}),
+		"attributes after the public key": with(func(k *rawKey) {
+			k.Version = 1
+			k.PublicKey = publicKey(sk.PublicKey().Bytes(), 0)
+			k.Extra = attributes(valid)
+		}),
+		"primitive attributes": with(func(k *rawKey) {
+			k.Attributes = asn1.RawValue{Class: asn1.ClassContextSpecific, Tag: 0, Bytes: valid}
+		}),
+		"an attribute that is not a SEQUENCE": with(func(k *rawKey) { k.Attributes = attributes(asn1.NullBytes) }),
+		"an attribute without values":         with(func(k *rawKey) { k.Attributes = attributes(mustMarshal(attribute{friendlyName, set()})) }),
+		"attribute values in a SEQUENCE":      with(func(k *rawKey) { k.Attributes = attributes(sequenceOfValues) }),
+		"an attribute with an extra element":  with(func(k *rawKey) { k.Attributes = attributes(extraInAttribute) }),
+		"a truncated attribute value": with(func(k *rawKey) {
+			k.Attributes = attributes(mustMarshal(attribute{friendlyName, set(value[:len(value)-1])}))
+		}),
+		"an empty public key": with(func(k *rawKey) {
+			k.Version = 1
+			k.PublicKey = publicKey(nil, 0)
+		}),
+		"a public key with unused bits": with(func(k *rawKey) {
+			k.Version = 1
+			k.PublicKey = publicKey(sk.PublicKey().Bytes(), 1)
+		}),
+		"a constructed public key": with(func(k *rawKey) {
+			k.Version = 1
+			bits := asn1.BitString{Bytes: sk.PublicKey().Bytes(), BitLength: 8 * len(sk.PublicKey().Bytes())}
+			k.PublicKey = asn1.RawValue{Class: asn1.ClassContextSpecific, Tag: 1, IsCompound: true, Bytes: mustMarshal(bits)}
+		}),
+	}
+	for name, der := range rejected {
+		if _, err := compositemldsa.ParsePKCS8PrivateKey(der); err == nil {
+			t.Errorf("ParsePKCS8PrivateKey accepted %s", name)
+		}
 	}
 }

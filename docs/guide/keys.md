@@ -44,6 +44,7 @@ err = os.WriteFile("key.pem", pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY",
 
 `MarshalPKCS8PrivateKey` writes a version 0 `PrivateKeyInfo`. `ParsePKCS8PrivateKey` also accepts
 a version 1 `OneAsymmetricKey` and checks that an included public key matches the private key.
+Attributes must be well formed and are discarded.
 
 ## Keys of any type
 
@@ -77,6 +78,7 @@ Parsing rejects anything the draft does not allow:
 * traditional keys in any encoding other than the single DER form section 4 of the draft fixes,
   such as an ECDSA private key that carries its public key
 * ML-DSA private keys in the expanded form, since the draft stores only the seed
+* PKCS #8 keys with malformed attributes, a malformed public key or elements after the public key
 * trailing data after any structure
 
 ## Components

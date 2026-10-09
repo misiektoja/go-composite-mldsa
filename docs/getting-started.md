@@ -8,7 +8,7 @@ This page signs a message with a composite key, then builds a small certificate 
 go get github.com/misiektoja/go-composite-mldsa
 ```
 
-The module needs Go 1.27.1 or newer.
+The module needs Go 1.27.2 or newer.
 
 ## Sign and verify
 

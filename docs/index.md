@@ -20,7 +20,7 @@ revocation lists keep their usual structure.
 | `compositemldsa` | Generate keys, encode them as raw bytes, PKIX and PKCS #8, sign and verify |
 | `compositex509` | Create and verify certificates, certificate requests and revocation lists with composite keys, passing every other key type through to `crypto/x509` |
 
-The module needs Go 1.27.1 or newer and imports nothing outside the standard library.
+The module needs Go 1.27.2 or newer and imports nothing outside the standard library.
 
 ## Where to go next
 

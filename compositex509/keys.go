@@ -15,11 +15,14 @@ func MarshalPKIXPublicKey(pub any) ([]byte, error) {
 }
 
 // Decodes a DER SubjectPublicKeyInfo. Composite keys are returned as *compositemldsa.PublicKey and
-// every other key as crypto/x509 returns it.
+// every other key as crypto/x509 returns it. The key is nil when the error is not.
 func ParsePKIXPublicKey(der []byte) (any, error) {
 	pk, err := compositePublicKey(der)
-	if err != nil || pk != nil {
-		return pk, err
+	if err != nil {
+		return nil, err
+	}
+	if pk != nil {
+		return pk, nil
 	}
 	return x509.ParsePKIXPublicKey(der)
 }
@@ -33,14 +36,19 @@ func MarshalPKCS8PrivateKey(key any) ([]byte, error) {
 }
 
 // Decodes a DER PKCS #8 private key. Composite keys are returned as *compositemldsa.PrivateKey and
-// every other key as crypto/x509 returns it.
+// every other key as crypto/x509 returns it. The key is nil when the error is not.
 func ParsePKCS8PrivateKey(der []byte) (any, error) {
 	elements, err := sequenceElements(der)
 	if err == nil && len(elements) >= 2 {
 		if _, ok, err := compositeAlgorithm(elements[1]); err != nil {
 			return nil, err
 		} else if ok {
-			return compositemldsa.ParsePKCS8PrivateKey(der)
+			// Returning the typed result directly would wrap a nil *PrivateKey in a non-nil any.
+			sk, err := compositemldsa.ParsePKCS8PrivateKey(der)
+			if err != nil {
+				return nil, err
+			}
+			return sk, nil
 		}
 	}
 	return x509.ParsePKCS8PrivateKey(der)

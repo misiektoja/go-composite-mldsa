@@ -512,3 +512,60 @@ func TestPassThrough(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+// A failed parse returns an untyped nil key, as crypto/x509 does, so a nil check on the key is
+// reliable.
+func TestParseErrorsReturnNilKey(t *testing.T) {
+	sk := vectorKey(t, compositemldsa.MLDSA44Ed25519SHA512)
+	spki, err := compositex509.MarshalPKIXPublicKey(sk.Public())
+	if err != nil {
+		t.Fatal(err)
+	}
+	var info struct {
+		Algorithm pkix.AlgorithmIdentifier
+		PublicKey asn1.BitString
+	}
+	if _, err := asn1.Unmarshal(spki, &info); err != nil {
+		t.Fatal(err)
+	}
+	info.Algorithm.Parameters = asn1.NullRawValue
+	withParameters, err := asn1.Marshal(info)
+	if err != nil {
+		t.Fatal(err)
+	}
+	info.Algorithm.Parameters = asn1.RawValue{}
+	info.PublicKey.Bytes = info.PublicKey.Bytes[:100]
+	info.PublicKey.BitLength = 800
+	shortKey, err := asn1.Marshal(info)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, der := range map[string][]byte{"composite key with parameters": withParameters, "short composite key": shortKey, "empty SEQUENCE": {0x30, 0x00}} {
+		if pub, err := compositex509.ParsePKIXPublicKey(der); err == nil || pub != nil {
+			t.Errorf("ParsePKIXPublicKey(%s) = %#v, %v", name, pub, err)
+		}
+	}
+
+	pkcs8, err := compositex509.MarshalPKCS8PrivateKey(sk)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var key struct {
+		Version    int
+		Algorithm  pkix.AlgorithmIdentifier
+		PrivateKey []byte
+	}
+	if _, err := asn1.Unmarshal(pkcs8, &key); err != nil {
+		t.Fatal(err)
+	}
+	key.PrivateKey = key.PrivateKey[:10]
+	shortPrivate, err := asn1.Marshal(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, der := range map[string][]byte{"short composite key": shortPrivate, "empty SEQUENCE": {0x30, 0x00}} {
+		if priv, err := compositex509.ParsePKCS8PrivateKey(der); err == nil || priv != nil {
+			t.Errorf("ParsePKCS8PrivateKey(%s) = %#v, %v", name, priv, err)
+		}
+	}
+}

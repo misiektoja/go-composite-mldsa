@@ -103,6 +103,17 @@ func AlgorithmFromOID(oid asn1.ObjectIdentifier) (Algorithm, bool) {
 	return 0, false
 }
 
+// Returns the supported algorithm with the draft name that String returns, such as
+// "MLDSA65-ECDSA-P256-SHA512". The match is exact and case-sensitive.
+func AlgorithmFromName(name string) (Algorithm, bool) {
+	for a := Algorithm(1); a < algorithmEnd; a++ {
+		if registry[a].name == name {
+			return a, true
+		}
+	}
+	return 0, false
+}
+
 // Reports whether a is one of the supported algorithms.
 func (a Algorithm) valid() bool {
 	return a > 0 && a < algorithmEnd
