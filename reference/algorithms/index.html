@@ -1073,7 +1073,8 @@
 <h1 id="algorithms">Algorithms<a class="headerlink" href="#algorithms" title="Permanent link">&para;</a></h1>
 <p>The library implements the 15 draft-19 algorithms whose components the Go standard library
 provides. Names match the draft and Bouncy Castle. OIDs are under <code>id-alg</code> (1.3.6.1.5.5.7.6) and
-were allocated early by IANA, according to section 8.1.2 of the draft.</p>
+were allocated early by IANA, according to section 8.1.2 of the draft. <code>Algorithm.String</code> returns
+the name. <code>AlgorithmFromName</code> and <code>AlgorithmFromOID</code> map a name or OID back to the constant.</p>
 <table>
 <thead>
 <tr>
@@ -1336,7 +1337,8 @@ because DER drops leading zeros.</p>
 </tr>
 </tbody>
 </table>
-<p><code>AlgorithmFromOID</code> reports false for these OIDs. Parsing a key or signature that uses them fails.</p>
+<p><code>AlgorithmFromOID</code> and <code>AlgorithmFromName</code> report false for these algorithms. Parsing a key or
+signature that uses them fails.</p>
 
 
 

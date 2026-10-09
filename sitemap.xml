@@ -2,54 +2,54 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/getting-started/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/known-limitations/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/development/development/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/development/release-process/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/development/testing/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/guide/certificates/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/guide/keys/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/guide/signatures/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/interoperability/tested-implementations/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/reference/algorithms/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/reference/compatibility/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
     <url>
          <loc>https://misiektoja.github.io/go-composite-mldsa/security/security-model/</loc>
-         <lastmod>2026-09-28</lastmod>
+         <lastmod>2026-10-09</lastmod>
     </url>
 </urlset>

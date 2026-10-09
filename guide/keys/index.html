@@ -1167,7 +1167,8 @@ vectors byte for byte.</p>
 <span class="nx">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">WriteFile</span><span class="p">(</span><span class="s">"key.pem"</span><span class="p">,</span><span class="w"> </span><span class="nx">pem</span><span class="p">.</span><span class="nx">EncodeToMemory</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">pem</span><span class="p">.</span><span class="nx">Block</span><span class="p">{</span><span class="nx">Type</span><span class="p">:</span><span class="w"> </span><span class="s">"PRIVATE KEY"</span><span class="p">,</span><span class="w"> </span><span class="nx">Bytes</span><span class="p">:</span><span class="w"> </span><span class="nx">der</span><span class="p">}),</span><span class="w"> </span><span class="mo">0o600</span><span class="p">)</span>
 </code></pre></div>
 <p><code>MarshalPKCS8PrivateKey</code> writes a version 0 <code>PrivateKeyInfo</code>. <code>ParsePKCS8PrivateKey</code> also accepts
-a version 1 <code>OneAsymmetricKey</code> and checks that an included public key matches the private key.</p>
+a version 1 <code>OneAsymmetricKey</code> and checks that an included public key matches the private key.
+Attributes must be well formed and are discarded.</p>
 <h2 id="keys-of-any-type">Keys of any type<a class="headerlink" href="#keys-of-any-type" title="Permanent link">&para;</a></h2>
 <p><code>compositex509.ParsePKIXPublicKey</code>, <code>MarshalPKIXPublicKey</code>, <code>ParsePKCS8PrivateKey</code> and
 <code>MarshalPKCS8PrivateKey</code> work like their <code>crypto/x509</code> counterparts and also handle composite keys.
@@ -1195,6 +1196,7 @@ Use them where a program reads keys of several types:</p>
 <li>traditional keys in any encoding other than the single DER form section 4 of the draft fixes,
   such as an ECDSA private key that carries its public key</li>
 <li>ML-DSA private keys in the expanded form, since the draft stores only the seed</li>
+<li>PKCS #8 keys with malformed attributes, a malformed public key or elements after the public key</li>
 <li>trailing data after any structure</li>
 </ul>
 <h2 id="components">Components<a class="headerlink" href="#components" title="Permanent link">&para;</a></h2>

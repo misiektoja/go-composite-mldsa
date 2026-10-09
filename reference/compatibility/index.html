@@ -1135,9 +1135,10 @@ reason. Patch releases keep the API.</p>
 <li><strong>Algorithms may be added.</strong> <code>Algorithms()</code> may return more entries, for example once the
   standard library gains Brainpool or Ed448. Switch statements over <code>Algorithm</code> need a default case.</li>
 <li><strong>Algorithm values are not stable identifiers.</strong> Store the OID or the name, never the integer
-  value of an <code>Algorithm</code>.</li>
+  value of an <code>Algorithm</code>. <code>AlgorithmFromOID</code> and <code>AlgorithmFromName</code> read them back.</li>
 <li><strong><code>Options</code> may gain fields.</strong> Construct it with field names.</li>
-<li><strong>Parsing may become stricter</strong> when the draft tightens a rule. The release notes name the change.</li>
+<li><strong>Parsing may become stricter</strong>, for example when the draft tightens a rule. The release notes
+  name the change.</li>
 </ul>
 <h2 id="upgrading">Upgrading<a class="headerlink" href="#upgrading" title="Permanent link">&para;</a></h2>
 <ol>
@@ -1149,8 +1150,10 @@ reason. Patch releases keep the API.</p>
 </ol>
 <h2 id="go-version">Go version<a class="headerlink" href="#go-version" title="Permanent link">&para;</a></h2>
 <p>The module declares the minimum Go version in <code>go.mod</code>. Every release is built and tested with
-exactly that toolchain. Go 1.27.1 is the first version whose <code>crypto/mldsa</code>, <code>crypto/x509</code> and
-<code>crypto.MessageSigner</code> support everything the library needs.</p>
+exactly that toolchain, so the minimum moves to a newer Go patch release when that release fixes a
+vulnerability <code>govulncheck</code> finds in the module or its example. Go 1.27.1 is the first version
+whose <code>crypto/mldsa</code>, <code>crypto/x509</code> and <code>crypto.MessageSigner</code> support everything the library
+needs. The minimum is Go 1.27.2, which fixed such a vulnerability in <code>os</code>.</p>
 
 
 
