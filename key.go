@@ -39,6 +39,9 @@ type PrivateKey struct {
 	encoded []byte
 }
 
+// Without SignMessage, crypto.SignMessage would silently fall back to Sign.
+var _ crypto.MessageSigner = (*PrivateKey)(nil)
+
 var errUnknownAlgorithm = errors.New("compositemldsa: unknown algorithm")
 
 // Generates a fresh composite key pair. Both components are newly generated, as section 3.1 of the
