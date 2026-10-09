@@ -65,6 +65,9 @@ func TestAlgorithmMetadata(t *testing.T) {
 		if got, ok := compositemldsa.AlgorithmFromOID(want); !ok || got != alg {
 			t.Errorf("AlgorithmFromOID(%s) = %s, %v", want, got, ok)
 		}
+		if got, ok := compositemldsa.AlgorithmFromName(alg.String()); !ok || got != alg {
+			t.Errorf("AlgorithmFromName(%q) = %s, %v", alg.String(), got, ok)
+		}
 		wantHash := crypto.SHA512
 		if strings.HasSuffix(alg.String(), "-SHA256") {
 			wantHash = crypto.SHA256
@@ -86,6 +89,20 @@ func TestAlgorithmMetadata(t *testing.T) {
 	} {
 		if alg, ok := compositemldsa.AlgorithmFromOID(oid); ok {
 			t.Errorf("AlgorithmFromOID(%s) = %s", oid, alg)
+		}
+	}
+	// Names of unsupported algorithms, OID names and other spellings are not accepted.
+	for _, name := range []string{
+		"",
+		"MLDSA65-ECDSA-brainpoolP256r1-SHA512",
+		"MLDSA87-Ed448-SHAKE256",
+		"id-MLDSA65-ECDSA-P256-SHA512",
+		"mldsa65-ecdsa-p256-sha512",
+		" MLDSA65-ECDSA-P256-SHA512",
+		"unknown composite ML-DSA algorithm",
+	} {
+		if alg, ok := compositemldsa.AlgorithmFromName(name); ok {
+			t.Errorf("AlgorithmFromName(%q) = %s", name, alg)
 		}
 	}
 	var zero compositemldsa.Algorithm
