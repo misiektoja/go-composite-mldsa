@@ -28,7 +28,9 @@ therefore does not yield a signature over the original message.
 * A PKCS #8 key that includes its public key must match the private key.
 * `compositex509` verifies every signature it creates before returning the certificate, request or
   revocation list, including signatures from remote signers.
-* Composite subject keys are refused encryption and key agreement usages.
+* `compositex509` refuses to sign under a composite CA or issuer key with any other key.
+* Composite subject keys are refused encryption and key agreement usages in certificates and
+  certificate requests.
 * `CheckSignatureFrom` and `CheckRevocationListSignatureFrom` apply the basic constraints and key
   usage checks of `crypto/x509` to a composite parent.
 
