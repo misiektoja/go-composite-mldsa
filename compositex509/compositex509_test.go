@@ -593,7 +593,15 @@ func TestParseErrorsReturnNilKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for name, der := range map[string][]byte{"composite key with parameters": withParameters, "short composite key": shortKey, "empty SEQUENCE": {0x30, 0x00}} {
+	// crypto/x509 itself returns a typed nil *ecdh.PublicKey for a short X25519 key.
+	oidX25519 := asn1.ObjectIdentifier{1, 3, 101, 110}
+	info.Algorithm = pkix.AlgorithmIdentifier{Algorithm: oidX25519}
+	info.PublicKey = asn1.BitString{Bytes: make([]byte, 31), BitLength: 8 * 31}
+	shortX25519, err := asn1.Marshal(info)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, der := range map[string][]byte{"composite key with parameters": withParameters, "short composite key": shortKey, "short X25519 key": shortX25519, "empty SEQUENCE": {0x30, 0x00}} {
 		if pub, err := compositex509.ParsePKIXPublicKey(der); err == nil || pub != nil {
 			t.Errorf("ParsePKIXPublicKey(%s) = %#v, %v", name, pub, err)
 		}
@@ -616,7 +624,16 @@ func TestParseErrorsReturnNilKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for name, der := range map[string][]byte{"short composite key": shortPrivate, "empty SEQUENCE": {0x30, 0x00}} {
+	// crypto/x509 itself returns a typed nil *ecdh.PrivateKey for a short X25519 key.
+	key.Algorithm = pkix.AlgorithmIdentifier{Algorithm: oidX25519}
+	if key.PrivateKey, err = asn1.Marshal(make([]byte, 30)); err != nil {
+		t.Fatal(err)
+	}
+	shortX25519Private, err := asn1.Marshal(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, der := range map[string][]byte{"short composite key": shortPrivate, "short X25519 key": shortX25519Private, "empty SEQUENCE": {0x30, 0x00}} {
 		if priv, err := compositex509.ParsePKCS8PrivateKey(der); err == nil || priv != nil {
 			t.Errorf("ParsePKCS8PrivateKey(%s) = %#v, %v", name, priv, err)
 		}
