@@ -59,6 +59,7 @@ The library has not had an external security review.
 ## FIPS 140-3
 
 The FIPS 140-3 Go Cryptographic Module v1.0.0 does not include ML-DSA, so generating, loading and
-verifying composite keys fails when that module is selected. The library itself is not FIPS
+verifying composite keys fails when that module is selected. Module v1.26.0 includes ML-DSA, as
+[Known limitations](../known-limitations.md#fips-mode) describes. The library itself is not FIPS
 validated. Section 10.2 of the draft gives non-authoritative guidance on certifying a composite
 implementation when only one component is FIPS approved.
