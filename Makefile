@@ -91,7 +91,7 @@ FUZZ_TIME ?= 20s
 # (golang/go#75804), so the bounded runs disable it. Set a duration to minimize crashers locally.
 FUZZ_MINIMIZE_TIME ?= 0
 FUZZ_TARGETS := .:FuzzParsePKIXPublicKey .:FuzzParsePKCS8PrivateKey .:FuzzVerify \
-	./compositex509:FuzzParsePKIXPublicKey ./compositex509:FuzzCertificate
+	./compositex509:FuzzParsePKIXPublicKey ./compositex509:FuzzParsePKCS8PrivateKey ./compositex509:FuzzCertificate
 
 .PHONY: fuzz
 fuzz: ## Fuzz every parsing target for FUZZ_TIME each. Failing inputs are saved under testdata.
