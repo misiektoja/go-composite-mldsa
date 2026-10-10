@@ -43,8 +43,9 @@ func (o *Options) HashFunc() crypto.Hash {
 // Signs message with both components.
 //
 // With a zero opts.HashFunc the complete message is signed. When opts.HashFunc is the pre-hash of
-// the algorithm, message must be its digest. opts may be *Options to set a context. The random
-// source is used by the traditional component. A nil source selects crypto/rand.
+// the algorithm, message must be its digest. opts may be *Options to set a context. The RSA-PSS
+// component reads random. ECDSA reads it only with GODEBUG=cryptocustomrand=1 and otherwise uses
+// the system random source, as ML-DSA always does. A nil source selects crypto/rand.
 func (sk *PrivateKey) Sign(random io.Reader, message []byte, opts crypto.SignerOpts) ([]byte, error) {
 	context, hash := signerOptions(opts)
 	representative, err := messageRepresentative(sk.alg, message, context, hash)
