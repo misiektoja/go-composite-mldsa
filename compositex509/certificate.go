@@ -10,7 +10,9 @@ import (
 )
 
 // Works like x509.CreateCertificate and also accepts composite keys as pub, as the signer behind
-// priv or both. Without a composite key it calls x509.CreateCertificate unchanged.
+// priv or both. Without a composite key it calls x509.CreateCertificate unchanged. The signer must
+// hold the parent's key whenever the parent names one, including a composite key that crypto/x509
+// leaves nil and does not check.
 //
 // A composite signer is any crypto.Signer whose Public method returns *compositemldsa.PublicKey
 // and whose Sign method signs the complete message when opts.HashFunc is zero. The signature
@@ -26,6 +28,9 @@ func CreateCertificate(random io.Reader, template, parent *x509.Certificate, pub
 	signerKey := compositeSignerKey(signer)
 	subjectKey, compositeSubject := pub.(*compositemldsa.PublicKey)
 	if signerKey == nil && !compositeSubject {
+		if err := checkCompositeParentKey(parent, signer); err != nil {
+			return nil, err
+		}
 		return x509.CreateCertificate(random, template, parent, pub, priv)
 	}
 	if err := checkParentKey(parent, signer); err != nil {
@@ -135,6 +140,22 @@ func checkParentKey(parent *x509.Certificate, signer crypto.Signer) error {
 	}
 	have, ok := signer.Public().(interface{ Equal(crypto.PublicKey) bool })
 	if !ok || !have.Equal(want) {
+		return errorf("provided PrivateKey doesn't match parent's PublicKey")
+	}
+	return nil
+}
+
+// Checks that the signer holds the parent's key when that key is composite. crypto/x509 leaves a
+// composite parent key nil and then accepts any signer.
+func checkCompositeParentKey(parent *x509.Certificate, signer crypto.Signer) error {
+	if parent == nil || parent.PublicKey != nil {
+		return nil
+	}
+	want, err := compositePublicKey(parent.RawSubjectPublicKeyInfo)
+	if err != nil {
+		return errorf("parsing the parent public key: %w", err)
+	}
+	if want != nil && !want.Equal(signer.Public()) {
 		return errorf("provided PrivateKey doesn't match parent's PublicKey")
 	}
 	return nil
