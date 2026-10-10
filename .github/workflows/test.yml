@@ -47,6 +47,10 @@ jobs:
           TEST_SCRATCH: ${{ runner.temp }}/tests
         run: make test
 
+      # The documentation says composite keys work in FIPS 140-3 mode with the module test-fips selects.
+      - name: Run the tests in FIPS 140-3 mode
+        run: make test-fips
+
   fuzz:
     permissions:
       contents: read
