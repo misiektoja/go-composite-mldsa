@@ -12,7 +12,7 @@ change.
 
 ## Steps
 
-1. On `dev`, add or complete the `## [X.Y.Z] - D Mon YYYY` section in `RELEASE_NOTES.md` and read it as a user of the library. Name the draft version and the tested implementation versions.
+1. On `dev`, add or complete the `## [X.Y.Z] - D Mon YYYY` section in `RELEASE_NOTES.md` and read it as a user of the library. When the release moves to another draft version or tests against another Bouncy Castle version, say so in the notes and update [Tested implementations](../interoperability/tested-implementations.md).
 2. Run the checks:
 
     ```bash
