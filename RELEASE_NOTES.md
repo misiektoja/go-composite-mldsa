@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.2.1] - TBD
+
+This release closes two gaps in the `compositex509` creation checks and returns the `crypto/x509` errors for keys in other formats. It also corrects the documentation of the random source and of two differences from `crypto/x509`.
+
+### Signatures
+
+* **Random source** - The documentation now says that only the RSA-PSS component reads the random source passed to `Sign`. ECDSA reads it only with `GODEBUG=cryptocustomrand=1` and otherwise uses the system random source, as ML-DSA always does.
+
+### Certificates
+
+* **Issuer key check under a composite CA** - `CreateCertificate` and `CreateRevocationList` refuse a signer that does not hold the composite CA key, also when the signer and subject keys are ECDSA, RSA, Ed25519 or ML-DSA. Before, they returned a certificate or revocation list that no verifier accepts.
+* **Key usage in CSR `Attributes`** - `CreateCertificateRequest` applies the composite key usage rules to a key usage requested through the deprecated `Attributes` field. `crypto/x509` encodes that value in preference to `ExtraExtensions`, so a forbidden usage could reach the request.
+* **Errors for other key formats** - `compositex509.ParsePKIXPublicKey` and `compositex509.ParsePKCS8PrivateKey` return the `crypto/x509` error for PKCS #1 and SEC 1 input, which names the parser to use. Before, they returned a raw ASN.1 error.
+* **Documented differences from `crypto/x509`** - A standard CA key cannot sign a composite subject key with SHA-1. A composite CA's generated `SubjectKeyId` always uses SHA-256 and ignores `GODEBUG=x509sha256skid=0`.
+
 ## [0.2.0] - 9 Oct 2026
 
 This release adds a lookup by algorithm name, tightens PKCS #8 parsing and fixes the nil key returned by the `compositex509` parsers on errors. The library now needs **Go 1.27.2** or newer, which fixes standard library vulnerabilities found in Go 1.27.1.
