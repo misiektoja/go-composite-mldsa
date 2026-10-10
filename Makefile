@@ -54,6 +54,13 @@ test-scratch:
 test: vet test-scratch ## Run the tests under the race detector.
 	go test -race -count=1 -coverprofile "$(TEST_SCRATCH)/cover.out" ./...
 
+# The FIPS 140-3 Go Cryptographic Module that test-fips selects. Module v1.0.0 has no ML-DSA.
+FIPS_MODULE ?= v1.26.0
+
+.PHONY: test-fips
+test-fips: ## Run the tests in FIPS 140-3 mode with the FIPS_MODULE Go Cryptographic Module.
+	GOFIPS140=$(FIPS_MODULE) GODEBUG=fips140=on go test -count=1 ./...
+
 # Bouncy Castle is the independent implementation the interoperability tests compare against. The jars
 # come from Maven Central and are checked against these SHA-256 digests before use.
 BC_VERSION ?= 1.86
