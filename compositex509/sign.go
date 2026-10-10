@@ -79,8 +79,10 @@ func signStandard(random io.Reader, signer crypto.Signer, algorithm x509.Signatu
 	return signature, nil
 }
 
-// The signer options crypto/x509 uses for each signature algorithm it creates. SHA-1 and MD5 are
-// absent because crypto/x509 refuses to sign with them.
+// The signer options crypto/x509 uses for each signature algorithm it creates. MD5 is absent
+// because crypto/x509 refuses to sign with it. SHA-1 is absent on purpose, although crypto/x509
+// still signs with it, because chosen-prefix collisions make SHA-1 certificate signatures
+// forgeable.
 var signerOptionsByAlgorithm = map[x509.SignatureAlgorithm]crypto.SignerOpts{
 	x509.SHA256WithRSA:    crypto.SHA256,
 	x509.SHA384WithRSA:    crypto.SHA384,

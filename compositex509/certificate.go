@@ -17,9 +17,10 @@ import (
 // A composite signer is any crypto.Signer whose Public method returns *compositemldsa.PublicKey
 // and whose Sign method signs the complete message when opts.HashFunc is zero. The signature
 // algorithm follows from the key, so template.SignatureAlgorithm must be zero for a composite
-// signer. A composite subject key must not be given encryption or key agreement usages. A missing
-// SubjectKeyId of a CA certificate is derived from the SHA-256 hash of the subject public key, as
-// crypto/x509 does.
+// signer. A composite subject key must not be given encryption or key agreement usages and cannot
+// be signed with SHA-1, which crypto/x509 still allows. A missing SubjectKeyId of a CA certificate
+// with a composite key is the first 20 bytes of the SHA-256 hash of the key, even when
+// GODEBUG=x509sha256skid=0 makes crypto/x509 use SHA-1 for other keys.
 func CreateCertificate(random io.Reader, template, parent *x509.Certificate, pub, priv any) ([]byte, error) {
 	signer, ok := priv.(crypto.Signer)
 	if !ok {
@@ -54,7 +55,8 @@ func CreateCertificate(random io.Reader, template, parent *x509.Certificate, pub
 			return nil, err
 		}
 		if len(tmpl.SubjectKeyId) == 0 && tmpl.IsCA {
-			// RFC 7093 section 2 method 1, the crypto/x509 default.
+			// RFC 7093 section 2 method 1, the crypto/x509 default. The x509sha256skid setting is
+			// internal to crypto/x509, so it cannot be followed here.
 			sum := sha256.Sum256(subjectKey.Bytes())
 			tmpl.SubjectKeyId = sum[:20]
 		}

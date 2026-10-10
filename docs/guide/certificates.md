@@ -38,8 +38,11 @@ A few rules differ from `crypto/x509`:
   `KeyEncipherment`, `DataEncipherment`, `KeyAgreement`, `EncipherOnly` or `DecipherOnly`, as
   section 5.2 of the draft requires. A key usage extension in `ExtraExtensions` is checked the
   same way.
+* A standard CA key cannot sign a composite subject key with `SHA1WithRSA` or `ECDSAWithSHA1`.
+  `crypto/x509` still allows both.
 * A CA certificate without `SubjectKeyId` gets the first 20 bytes of the SHA-256 hash of the
-  composite public key, as `crypto/x509` does for other keys.
+  composite public key. This is the `crypto/x509` default, but `GODEBUG=x509sha256skid=0`, which
+  switches `crypto/x509` to SHA-1, has no effect on composite keys.
 
 Every certificate is signed, verified against the signer's public key and parsed before it is
 returned.
