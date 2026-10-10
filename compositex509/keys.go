@@ -24,7 +24,12 @@ func ParsePKIXPublicKey(der []byte) (any, error) {
 	if pk != nil {
 		return pk, nil
 	}
-	return x509.ParsePKIXPublicKey(der)
+	// crypto/x509 can return a typed nil key with an error, for example for a short X25519 key.
+	key, err := x509.ParsePKIXPublicKey(der)
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
 }
 
 // Encodes a composite key or any key crypto/x509 supports as a DER PKCS #8 PrivateKeyInfo.
@@ -47,7 +52,12 @@ func ParsePKCS8PrivateKey(der []byte) (any, error) {
 		}
 		return sk, nil
 	}
-	return x509.ParsePKCS8PrivateKey(der)
+	// crypto/x509 can return a typed nil key with an error, for example for a short X25519 key.
+	key, err := x509.ParsePKCS8PrivateKey(der)
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
 }
 
 // Decodes a DER SubjectPublicKeyInfo when it names a composite algorithm. It returns nil for any
