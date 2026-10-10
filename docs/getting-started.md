@@ -50,7 +50,8 @@ device     MLDSA65-ECDSA-P256-SHA512
 all signatures verified, files written to out
 ```
 
-The program refuses to overwrite existing files and writes the private keys with mode 0600.
+The program writes all six files or none. It refuses to overwrite existing files and writes the
+private keys with mode 0600.
 
 ```go
 --8<-- "examples/hierarchy/main.go"
