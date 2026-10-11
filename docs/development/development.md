@@ -31,6 +31,7 @@ need them.
 
 ```bash
 make test           # go vet and the tests under the race detector
+make test-fips      # the tests in FIPS 140-3 mode
 make lint           # golangci-lint over both modules
 make actionlint     # lint the GitHub Actions workflows
 make fuzz           # fuzz every parser for FUZZ_TIME each, 20s by default

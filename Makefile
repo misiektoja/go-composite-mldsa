@@ -54,6 +54,13 @@ test-scratch:
 test: vet test-scratch ## Run the tests under the race detector.
 	go test -race -count=1 -coverprofile "$(TEST_SCRATCH)/cover.out" ./...
 
+# The FIPS 140-3 Go Cryptographic Module that test-fips selects. Module v1.0.0 has no ML-DSA.
+FIPS_MODULE ?= v1.26.0
+
+.PHONY: test-fips
+test-fips: ## Run the tests in FIPS 140-3 mode with the FIPS_MODULE Go Cryptographic Module.
+	GOFIPS140=$(FIPS_MODULE) GODEBUG=fips140=on go test -count=1 ./...
+
 # Bouncy Castle is the independent implementation the interoperability tests compare against. The jars
 # come from Maven Central and are checked against these SHA-256 digests before use.
 BC_VERSION ?= 1.86
@@ -91,7 +98,7 @@ FUZZ_TIME ?= 20s
 # (golang/go#75804), so the bounded runs disable it. Set a duration to minimize crashers locally.
 FUZZ_MINIMIZE_TIME ?= 0
 FUZZ_TARGETS := .:FuzzParsePKIXPublicKey .:FuzzParsePKCS8PrivateKey .:FuzzVerify \
-	./compositex509:FuzzParsePKIXPublicKey ./compositex509:FuzzCertificate
+	./compositex509:FuzzParsePKIXPublicKey ./compositex509:FuzzParsePKCS8PrivateKey ./compositex509:FuzzCertificate
 
 .PHONY: fuzz
 fuzz: ## Fuzz every parsing target for FUZZ_TIME each. Failing inputs are saved under testdata.

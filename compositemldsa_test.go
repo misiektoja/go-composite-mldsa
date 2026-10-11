@@ -249,6 +249,19 @@ func TestSignOptions(t *testing.T) {
 	}
 }
 
+// A nil or zero-value key returns an error instead of panicking, as Verify and the Marshal
+// functions do.
+func TestSignRejectsUnusableKey(t *testing.T) {
+	for name, sk := range map[string]*compositemldsa.PrivateKey{"nil": nil, "zero-value": {}} {
+		if _, err := sk.Sign(nil, []byte("message"), nil); err == nil {
+			t.Errorf("Sign with a %s key succeeded", name)
+		}
+		if _, err := sk.SignMessage(nil, []byte("message"), nil); err == nil {
+			t.Errorf("SignMessage with a %s key succeeded", name)
+		}
+	}
+}
+
 func TestVerifyRejectsTampering(t *testing.T) {
 	message := []byte("both components must verify")
 	for _, alg := range compositemldsa.Algorithms() {

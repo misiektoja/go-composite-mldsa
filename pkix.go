@@ -83,7 +83,8 @@ func MarshalPKCS8PrivateKey(sk *PrivateKey) ([]byte, error) {
 
 // Decodes a DER PKCS #8 PrivateKeyInfo or OneAsymmetricKey that holds a composite private key. An
 // included public key must match the private key. Attributes must be well formed and are
-// discarded. Elements after the public key are rejected.
+// discarded. Their values are checked for structure but not for DER encoding. Elements after the
+// public key are rejected.
 func ParsePKCS8PrivateKey(der []byte) (*PrivateKey, error) {
 	var key oneAsymmetricKey
 	if rest, err := asn1.Unmarshal(der, &key); err != nil {

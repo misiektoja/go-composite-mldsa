@@ -43,9 +43,13 @@ func (o *Options) HashFunc() crypto.Hash {
 // Signs message with both components.
 //
 // With a zero opts.HashFunc the complete message is signed. When opts.HashFunc is the pre-hash of
-// the algorithm, message must be its digest. opts may be *Options to set a context. The random
-// source is used by the traditional component. A nil source selects crypto/rand.
+// the algorithm, message must be its digest. opts may be *Options to set a context. The RSA-PSS
+// component reads random. ECDSA reads it only with GODEBUG=cryptocustomrand=1 and otherwise uses
+// the system random source, as ML-DSA always does. A nil source selects crypto/rand.
 func (sk *PrivateKey) Sign(random io.Reader, message []byte, opts crypto.SignerOpts) ([]byte, error) {
+	if sk == nil || !sk.alg.valid() {
+		return nil, errUnknownAlgorithm
+	}
 	context, hash := signerOptions(opts)
 	representative, err := messageRepresentative(sk.alg, message, context, hash)
 	if err != nil {
@@ -57,6 +61,9 @@ func (sk *PrivateKey) Sign(random io.Reader, message []byte, opts crypto.SignerO
 // Signs the complete message. A non-zero opts.HashFunc must be the pre-hash of the algorithm, which
 // is then applied here, so the result matches Sign with the digest.
 func (sk *PrivateKey) SignMessage(random io.Reader, message []byte, opts crypto.SignerOpts) ([]byte, error) {
+	if sk == nil || !sk.alg.valid() {
+		return nil, errUnknownAlgorithm
+	}
 	context, hash := signerOptions(opts)
 	if hash != 0 && hash != sk.alg.PreHash() {
 		return nil, fmt.Errorf("compositemldsa: %s pre-hashes with %s, not %s", sk.alg, sk.alg.PreHash(), hash)

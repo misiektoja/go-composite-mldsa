@@ -44,7 +44,8 @@ err = os.WriteFile("key.pem", pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY",
 
 `MarshalPKCS8PrivateKey` writes a version 0 `PrivateKeyInfo`. `ParsePKCS8PrivateKey` also accepts
 a version 1 `OneAsymmetricKey` and checks that an included public key matches the private key.
-Attributes must be well formed and are discarded.
+Attributes must form a well-formed SET OF Attribute and are discarded. Their values are checked for
+structure but not for DER encoding, since their types are unknown.
 
 ## Keys of any type
 

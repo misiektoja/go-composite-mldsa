@@ -325,6 +325,9 @@ func TestCreateRejects(t *testing.T) {
 		t.Fatal(err)
 	}
 	empty.ExtraExtensions = []pkix.Extension{{Id: asn1.ObjectIdentifier{2, 5, 29, 15}, Critical: true, Value: emptyUsage}}
+	ecRoot := issue(t, caTemplate("EC Root"), caTemplate("EC Root"), &ecKey.PublicKey, ecKey)
+	withSHA1 := leafTemplate("i.example.test")
+	withSHA1.SignatureAlgorithm = x509.ECDSAWithSHA1
 
 	cases := []struct {
 		name     string
@@ -336,6 +339,8 @@ func TestCreateRejects(t *testing.T) {
 		{"a SignatureAlgorithm for a composite signer", withAlgorithm, root, &ecKey.PublicKey, rootKey},
 		{"a signer that does not hold the parent key", leafTemplate("e.example.test"), root, &ecKey.PublicKey, otherKey},
 		{"a standard signer for a composite parent", leafTemplate("f.example.test"), root, otherKey.Public(), ecKey},
+		{"a standard signer and subject key for a composite parent", leafTemplate("j.example.test"), root, &ecKey.PublicKey, ecKey},
+		{"SHA-1 for a composite subject key", withSHA1, ecRoot, otherKey.Public(), ecKey},
 		{"key encipherment for a composite key", encipherment, root, otherKey.Public(), rootKey},
 		{"key agreement for a composite key in an extra extension", agreement, root, otherKey.Public(), rootKey},
 		{"an empty key usage extension for a composite key", empty, root, otherKey.Public(), rootKey},
@@ -354,12 +359,34 @@ func TestCreateRejects(t *testing.T) {
 	if _, err := compositex509.CreateCertificateRequest(rand.Reader, &x509.CertificateRequest{ExtraExtensions: agreement.ExtraExtensions}, rootKey); err == nil {
 		t.Error("CreateCertificateRequest accepted key agreement for a composite key")
 	}
+	// crypto/x509 encodes a key usage from an extensionRequest in Attributes in preference to one in
+	// ExtraExtensions.
+	signingUsage, err := asn1.Marshal(asn1.BitString{Bytes: []byte{0x80}, BitLength: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	attributes := []pkix.AttributeTypeAndValueSET{{
+		Type:  asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 14},
+		Value: [][]pkix.AttributeTypeAndValue{{{Type: asn1.ObjectIdentifier{2, 5, 29, 15}, Value: agreementUsage}}},
+	}}
+	for name, extra := range map[string][]pkix.Extension{
+		"alone": nil,
+		"with a signing usage in ExtraExtensions": {{Id: asn1.ObjectIdentifier{2, 5, 29, 15}, Critical: true, Value: signingUsage}},
+	} {
+		//nolint:staticcheck // SA1019: callers can still set the deprecated field, so the check must cover it.
+		if _, err := compositex509.CreateCertificateRequest(rand.Reader, &x509.CertificateRequest{Attributes: attributes, ExtraExtensions: extra}, rootKey); err == nil {
+			t.Errorf("CreateCertificateRequest accepted key agreement in Attributes %s", name)
+		}
+	}
 
 	list := func() *x509.RevocationList {
 		return &x509.RevocationList{Number: big.NewInt(1), ThisUpdate: time.Now(), NextUpdate: time.Now().Add(time.Hour)}
 	}
 	if _, err := compositex509.CreateRevocationList(rand.Reader, list(), root, otherKey); err == nil {
 		t.Error("CreateRevocationList accepted a signer that does not hold the issuer key")
+	}
+	if _, err := compositex509.CreateRevocationList(rand.Reader, list(), root, ecKey); err == nil {
+		t.Error("CreateRevocationList accepted a standard signer for a composite issuer")
 	}
 	noCRLSign := caTemplate("No CRL Sign")
 	noCRLSign.KeyUsage = x509.KeyUsageCertSign
@@ -513,6 +540,32 @@ func TestPassThrough(t *testing.T) {
 	}
 }
 
+// Keys in another format get the crypto/x509 error, which names the parser to use instead.
+func TestParseOtherKeyFormats(t *testing.T) {
+	rsaKey, ok := vectorKey(t, compositemldsa.MLDSA44RSA2048PSSSHA256).PublicKey().TraditionalPublicKey().(*rsa.PublicKey)
+	if !ok {
+		t.Fatal("traditional component is not an RSA key")
+	}
+	pkcs1 := x509.MarshalPKCS1PublicKey(rsaKey)
+	_, want := x509.ParsePKIXPublicKey(pkcs1)
+	if _, err := compositex509.ParsePKIXPublicKey(pkcs1); err == nil || want == nil || err.Error() != want.Error() {
+		t.Errorf("ParsePKIXPublicKey(PKCS #1) = %v, want %v", err, want)
+	}
+
+	ecKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sec1, err := x509.MarshalECPrivateKey(ecKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, want = x509.ParsePKCS8PrivateKey(sec1)
+	if _, err := compositex509.ParsePKCS8PrivateKey(sec1); err == nil || want == nil || err.Error() != want.Error() {
+		t.Errorf("ParsePKCS8PrivateKey(SEC 1) = %v, want %v", err, want)
+	}
+}
+
 // A failed parse returns an untyped nil key, as crypto/x509 does, so a nil check on the key is
 // reliable.
 func TestParseErrorsReturnNilKey(t *testing.T) {
@@ -540,7 +593,15 @@ func TestParseErrorsReturnNilKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for name, der := range map[string][]byte{"composite key with parameters": withParameters, "short composite key": shortKey, "empty SEQUENCE": {0x30, 0x00}} {
+	// crypto/x509 itself returns a typed nil *ecdh.PublicKey for a short X25519 key.
+	oidX25519 := asn1.ObjectIdentifier{1, 3, 101, 110}
+	info.Algorithm = pkix.AlgorithmIdentifier{Algorithm: oidX25519}
+	info.PublicKey = asn1.BitString{Bytes: make([]byte, 31), BitLength: 8 * 31}
+	shortX25519, err := asn1.Marshal(info)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, der := range map[string][]byte{"composite key with parameters": withParameters, "short composite key": shortKey, "short X25519 key": shortX25519, "empty SEQUENCE": {0x30, 0x00}} {
 		if pub, err := compositex509.ParsePKIXPublicKey(der); err == nil || pub != nil {
 			t.Errorf("ParsePKIXPublicKey(%s) = %#v, %v", name, pub, err)
 		}
@@ -563,7 +624,16 @@ func TestParseErrorsReturnNilKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for name, der := range map[string][]byte{"short composite key": shortPrivate, "empty SEQUENCE": {0x30, 0x00}} {
+	// crypto/x509 itself returns a typed nil *ecdh.PrivateKey for a short X25519 key.
+	key.Algorithm = pkix.AlgorithmIdentifier{Algorithm: oidX25519}
+	if key.PrivateKey, err = asn1.Marshal(make([]byte, 30)); err != nil {
+		t.Fatal(err)
+	}
+	shortX25519Private, err := asn1.Marshal(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, der := range map[string][]byte{"short composite key": shortPrivate, "short X25519 key": shortX25519Private, "empty SEQUENCE": {0x30, 0x00}} {
 		if priv, err := compositex509.ParsePKCS8PrivateKey(der); err == nil || priv != nil {
 			t.Errorf("ParsePKCS8PrivateKey(%s) = %#v, %v", name, priv, err)
 		}

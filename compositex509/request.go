@@ -9,8 +9,9 @@ import (
 // Works like x509.CreateCertificateRequest and also accepts a composite signer. Without one it
 // calls x509.CreateCertificateRequest unchanged.
 //
-// template.SignatureAlgorithm must be zero for a composite signer. A requested key usage extension
-// must not include encryption or key agreement usages.
+// template.SignatureAlgorithm must be zero for a composite signer. A requested key usage, from
+// ExtraExtensions or an extensionRequest in Attributes, must include a signing usage and no
+// encryption or key agreement usage.
 func CreateCertificateRequest(random io.Reader, template *x509.CertificateRequest, priv any) ([]byte, error) {
 	signer, ok := priv.(crypto.Signer)
 	if !ok {
@@ -23,9 +24,6 @@ func CreateCertificateRequest(random io.Reader, template *x509.CertificateReques
 	if template.SignatureAlgorithm != x509.UnknownSignatureAlgorithm {
 		return nil, errorf("SignatureAlgorithm must be zero for a composite signer")
 	}
-	if err := checkKeyUsage(0, template.ExtraExtensions); err != nil {
-		return nil, err
-	}
 	spki, err := MarshalPKIXPublicKey(signerKey)
 	if err != nil {
 		return nil, err
@@ -36,6 +34,15 @@ func CreateCertificateRequest(random io.Reader, template *x509.CertificateReques
 	}
 	layout, err := x509.CreateCertificateRequest(random, template, placeholder)
 	if err != nil {
+		return nil, err
+	}
+	// crypto/x509 merges ExtraExtensions into an extensionRequest from Attributes and lets the
+	// Attributes value win, so the encoded request is what gets checked.
+	requested, err := x509.ParseCertificateRequest(layout)
+	if err != nil {
+		return nil, errorf("parsing request layout: %w", err)
+	}
+	if err := checkKeyUsage(0, requested.Extensions); err != nil {
 		return nil, err
 	}
 	infoLayout, _, err := signedParts(layout)

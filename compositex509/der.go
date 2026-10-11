@@ -110,6 +110,17 @@ func compositeAlgorithm(der []byte) (compositemldsa.Algorithm, bool, error) {
 	return alg, true, nil
 }
 
+// Reports whether a DER algorithm identifier names a composite algorithm. Input that is not an
+// algorithm identifier reports false, so crypto/x509 can describe what it is instead.
+func namesCompositeAlgorithm(der []byte) bool {
+	var id pkix.AlgorithmIdentifier
+	if _, err := asn1.Unmarshal(der, &id); err != nil {
+		return false
+	}
+	_, ok := compositemldsa.AlgorithmFromOID(id.Algorithm)
+	return ok
+}
+
 // Returns the composite algorithm that signed a DER certificate, request or revocation list. It
 // reports false when another algorithm signed it.
 func SignatureAlgorithm(signed []byte) (compositemldsa.Algorithm, bool, error) {

@@ -138,22 +138,15 @@ func run(dir string) error {
 		return err
 	}
 	defer func() { _ = out.Close() }()
-	files := []struct {
-		name, blockType string
-		der             []byte
-		mode            os.FileMode
-	}{
+	if err := writePEMFiles(out, []pemFile{
 		{"root.pem", "CERTIFICATE", rootDER, 0o644},
 		{"root-key.pem", "PRIVATE KEY", rootKeyDER, 0o600},
 		{"device.csr.pem", "CERTIFICATE REQUEST", csrDER, 0o644},
 		{"device.pem", "CERTIFICATE", deviceDER, 0o644},
 		{"device-key.pem", "PRIVATE KEY", deviceKeyDER, 0o600},
 		{"root.crl.pem", "X509 CRL", crlDER, 0o644},
-	}
-	for _, f := range files {
-		if err := writePEM(out, f.name, f.blockType, f.der, f.mode); err != nil {
-			return err
-		}
+	}); err != nil {
+		return err
 	}
 	fmt.Printf("root CA    %s\n", rootKey.Algorithm())
 	fmt.Printf("device     %s\n", deviceKey.Algorithm())
@@ -170,18 +163,44 @@ func serial() *big.Int {
 	return n
 }
 
-// Writes one PEM block to a new file in dir and refuses to replace an existing one.
-func writePEM(dir *os.Root, name, blockType string, der []byte, mode os.FileMode) error {
-	f, err := dir.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, mode)
-	if errors.Is(err, os.ErrExist) {
-		return fmt.Errorf("%s exists, choose an empty directory", filepath.Join(dir.Name(), name))
+// One PEM block and the file it is written to.
+type pemFile struct {
+	name, blockType string
+	der             []byte
+	mode            os.FileMode
+}
+
+// Writes every file or none and refuses to replace an existing file. All files are created before
+// any is written, so an existing name stops the run before a private key reaches the disk. A failed
+// write removes the files this run created.
+func writePEMFiles(dir *os.Root, files []pemFile) (err error) {
+	created := make([]*os.File, 0, len(files))
+	defer func() {
+		for _, f := range created {
+			if closeErr := f.Close(); err == nil {
+				err = closeErr
+			}
+		}
+		if err != nil {
+			for _, f := range files[:len(created)] {
+				_ = dir.Remove(f.name)
+			}
+		}
+	}()
+	for _, f := range files {
+		file, err := dir.OpenFile(f.name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, f.mode)
+		if errors.Is(err, os.ErrExist) {
+			return fmt.Errorf("%s exists, choose an empty directory", filepath.Join(dir.Name(), f.name))
+		}
+		if err != nil {
+			return err
+		}
+		created = append(created, file)
 	}
-	if err != nil {
-		return err
+	for i, f := range files {
+		if err := pem.Encode(created[i], &pem.Block{Type: f.blockType, Bytes: f.der}); err != nil {
+			return err
+		}
 	}
-	if err := pem.Encode(f, &pem.Block{Type: blockType, Bytes: der}); err != nil {
-		_ = f.Close()
-		return err
-	}
-	return f.Close()
+	return nil
 }

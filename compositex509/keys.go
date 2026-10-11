@@ -24,7 +24,12 @@ func ParsePKIXPublicKey(der []byte) (any, error) {
 	if pk != nil {
 		return pk, nil
 	}
-	return x509.ParsePKIXPublicKey(der)
+	// crypto/x509 can return a typed nil key with an error, for example for a short X25519 key.
+	key, err := x509.ParsePKIXPublicKey(der)
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
 }
 
 // Encodes a composite key or any key crypto/x509 supports as a DER PKCS #8 PrivateKeyInfo.
@@ -39,30 +44,28 @@ func MarshalPKCS8PrivateKey(key any) ([]byte, error) {
 // every other key as crypto/x509 returns it. The key is nil when the error is not.
 func ParsePKCS8PrivateKey(der []byte) (any, error) {
 	elements, err := sequenceElements(der)
-	if err == nil && len(elements) >= 2 {
-		if _, ok, err := compositeAlgorithm(elements[1]); err != nil {
+	if err == nil && len(elements) >= 2 && namesCompositeAlgorithm(elements[1]) {
+		// Returning the typed result directly would wrap a nil *PrivateKey in a non-nil any.
+		sk, err := compositemldsa.ParsePKCS8PrivateKey(der)
+		if err != nil {
 			return nil, err
-		} else if ok {
-			// Returning the typed result directly would wrap a nil *PrivateKey in a non-nil any.
-			sk, err := compositemldsa.ParsePKCS8PrivateKey(der)
-			if err != nil {
-				return nil, err
-			}
-			return sk, nil
 		}
+		return sk, nil
 	}
-	return x509.ParsePKCS8PrivateKey(der)
+	// crypto/x509 can return a typed nil key with an error, for example for a short X25519 key.
+	key, err := x509.ParsePKCS8PrivateKey(der)
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
 }
 
-// Decodes a DER SubjectPublicKeyInfo when it names a composite algorithm and returns nil for any
-// other algorithm.
+// Decodes a DER SubjectPublicKeyInfo when it names a composite algorithm. It returns nil for any
+// other algorithm and for input that is not a SubjectPublicKeyInfo, which crypto/x509 then reports.
 func compositePublicKey(der []byte) (*compositemldsa.PublicKey, error) {
 	elements, err := sequenceElements(der)
-	if err != nil || len(elements) != 2 {
+	if err != nil || len(elements) != 2 || !namesCompositeAlgorithm(elements[0]) {
 		return nil, nil
-	}
-	if _, ok, err := compositeAlgorithm(elements[0]); err != nil || !ok {
-		return nil, err
 	}
 	return compositemldsa.ParsePKIXPublicKey(der)
 }

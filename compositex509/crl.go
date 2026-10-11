@@ -9,14 +9,17 @@ import (
 // Works like x509.CreateRevocationList and also accepts a composite signer. Without one it calls
 // x509.CreateRevocationList unchanged.
 //
-// template.SignatureAlgorithm must be zero for a composite signer. Unlike crypto/x509, a composite
-// signer must hold the issuer's key when the issuer certificate names one.
+// template.SignatureAlgorithm must be zero for a composite signer. Unlike crypto/x509, the signer
+// must hold the issuer's key when the signer or the issuer key is composite.
 func CreateRevocationList(random io.Reader, template *x509.RevocationList, issuer *x509.Certificate, priv crypto.Signer) ([]byte, error) {
 	if priv == nil {
 		return nil, errorf("revocation list signer is nil")
 	}
 	signerKey := compositeSignerKey(priv)
 	if signerKey == nil || template == nil || issuer == nil {
+		if err := checkCompositeParentKey(issuer, priv); err != nil {
+			return nil, err
+		}
 		return x509.CreateRevocationList(random, template, issuer, priv)
 	}
 	if template.SignatureAlgorithm != x509.UnknownSignatureAlgorithm {

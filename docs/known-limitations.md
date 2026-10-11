@@ -41,4 +41,8 @@ with `compositex509`.
 ## FIPS mode
 
 The FIPS 140-3 Go Cryptographic Module v1.0.0 has no ML-DSA, so composite keys cannot be generated,
-loaded or verified in that mode.
+loaded or verified with it. `GOFIPS140=certified` selects that module in Go 1.27.2.
+
+Module v1.26.0 includes ML-DSA and the tests pass with it in FIPS mode. Go 1.27.2 lists it as in
+process of validation and selects it with `GOFIPS140=inprocess` or `GOFIPS140=v1.26.0`. The library
+itself is not FIPS validated.

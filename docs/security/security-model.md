@@ -28,7 +28,9 @@ therefore does not yield a signature over the original message.
 * A PKCS #8 key that includes its public key must match the private key.
 * `compositex509` verifies every signature it creates before returning the certificate, request or
   revocation list, including signatures from remote signers.
-* Composite subject keys are refused encryption and key agreement usages.
+* `compositex509` refuses to sign under a composite CA or issuer key with any other key.
+* Composite subject keys are refused encryption and key agreement usages in certificates and
+  certificate requests.
 * `CheckSignatureFrom` and `CheckRevocationListSignatureFrom` apply the basic constraints and key
   usage checks of `crypto/x509` to a composite parent.
 
@@ -57,6 +59,7 @@ The library has not had an external security review.
 ## FIPS 140-3
 
 The FIPS 140-3 Go Cryptographic Module v1.0.0 does not include ML-DSA, so generating, loading and
-verifying composite keys fails when that module is selected. The library itself is not FIPS
+verifying composite keys fails when that module is selected. Module v1.26.0 includes ML-DSA, as
+[Known limitations](../known-limitations.md#fips-mode) describes. The library itself is not FIPS
 validated. Section 10.2 of the draft gives non-authoritative guidance on certifying a composite
 implementation when only one component is FIPS approved.

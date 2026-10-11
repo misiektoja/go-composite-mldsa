@@ -14,8 +14,12 @@ if err != nil {
 err = compositemldsa.Verify(key.PublicKey(), message, signature, nil)
 ```
 
-`Verify` returns nil only when both component signatures are valid. The random source passed to
-`Sign` is used by the ECDSA and RSA-PSS components. A nil reader selects `crypto/rand`.
+`Verify` returns nil only when both component signatures are valid.
+
+The RSA-PSS component reads the random source passed to `Sign`. ECDSA reads it only with
+`GODEBUG=cryptocustomrand=1` and otherwise uses the system random source, as ML-DSA always does.
+RSA PKCS #1 v1.5 and Ed25519 signatures need no randomness. A nil reader selects `crypto/rand`.
+Tests that need repeatable randomness can use `testing/cryptotest.SetGlobalRandom`.
 
 ## Contexts
 

@@ -10,14 +10,17 @@ import (
 )
 
 // Works like x509.CreateCertificate and also accepts composite keys as pub, as the signer behind
-// priv or both. Without a composite key it calls x509.CreateCertificate unchanged.
+// priv or both. Without a composite key it calls x509.CreateCertificate unchanged. The signer must
+// hold the parent's key whenever the parent names one, including a composite key that crypto/x509
+// leaves nil and does not check.
 //
 // A composite signer is any crypto.Signer whose Public method returns *compositemldsa.PublicKey
 // and whose Sign method signs the complete message when opts.HashFunc is zero. The signature
 // algorithm follows from the key, so template.SignatureAlgorithm must be zero for a composite
-// signer. A composite subject key must not be given encryption or key agreement usages. A missing
-// SubjectKeyId of a CA certificate is derived from the SHA-256 hash of the subject public key, as
-// crypto/x509 does.
+// signer. A composite subject key must not be given encryption or key agreement usages and cannot
+// be signed with SHA-1, which crypto/x509 still allows. A missing SubjectKeyId of a CA certificate
+// with a composite key is the first 20 bytes of the SHA-256 hash of the key, even when
+// GODEBUG=x509sha256skid=0 makes crypto/x509 use SHA-1 for other keys.
 func CreateCertificate(random io.Reader, template, parent *x509.Certificate, pub, priv any) ([]byte, error) {
 	signer, ok := priv.(crypto.Signer)
 	if !ok {
@@ -26,6 +29,9 @@ func CreateCertificate(random io.Reader, template, parent *x509.Certificate, pub
 	signerKey := compositeSignerKey(signer)
 	subjectKey, compositeSubject := pub.(*compositemldsa.PublicKey)
 	if signerKey == nil && !compositeSubject {
+		if err := checkCompositeParentKey(parent, signer); err != nil {
+			return nil, err
+		}
 		return x509.CreateCertificate(random, template, parent, pub, priv)
 	}
 	if err := checkParentKey(parent, signer); err != nil {
@@ -49,7 +55,8 @@ func CreateCertificate(random io.Reader, template, parent *x509.Certificate, pub
 			return nil, err
 		}
 		if len(tmpl.SubjectKeyId) == 0 && tmpl.IsCA {
-			// RFC 7093 section 2 method 1, the crypto/x509 default.
+			// RFC 7093 section 2 method 1, the crypto/x509 default. The x509sha256skid setting is
+			// internal to crypto/x509, so it cannot be followed here.
 			sum := sha256.Sum256(subjectKey.Bytes())
 			tmpl.SubjectKeyId = sum[:20]
 		}
@@ -135,6 +142,22 @@ func checkParentKey(parent *x509.Certificate, signer crypto.Signer) error {
 	}
 	have, ok := signer.Public().(interface{ Equal(crypto.PublicKey) bool })
 	if !ok || !have.Equal(want) {
+		return errorf("provided PrivateKey doesn't match parent's PublicKey")
+	}
+	return nil
+}
+
+// Checks that the signer holds the parent's key when that key is composite. crypto/x509 leaves a
+// composite parent key nil and then accepts any signer.
+func checkCompositeParentKey(parent *x509.Certificate, signer crypto.Signer) error {
+	if parent == nil || parent.PublicKey != nil {
+		return nil
+	}
+	want, err := compositePublicKey(parent.RawSubjectPublicKeyInfo)
+	if err != nil {
+		return errorf("parsing the parent public key: %w", err)
+	}
+	if want != nil && !want.Equal(signer.Public()) {
 		return errorf("provided PrivateKey doesn't match parent's PublicKey")
 	}
 	return nil

@@ -31,13 +31,18 @@ A few rules differ from `crypto/x509`:
 
 * `template.SignatureAlgorithm` must be zero when the CA key is composite. The algorithm follows
   from the key.
+* The signer must hold the key of a composite CA certificate, whatever the subject key is.
+  `crypto/x509` leaves that key nil and so cannot compare it with the signer.
 * A composite subject key may only sign. Its key usage must include at least one of
   `DigitalSignature`, `ContentCommitment`, `CertSign` or `CRLSign`. It must not include
   `KeyEncipherment`, `DataEncipherment`, `KeyAgreement`, `EncipherOnly` or `DecipherOnly`, as
   section 5.2 of the draft requires. A key usage extension in `ExtraExtensions` is checked the
   same way.
+* A standard CA key cannot sign a composite subject key with `SHA1WithRSA` or `ECDSAWithSHA1`.
+  `crypto/x509` still allows both.
 * A CA certificate without `SubjectKeyId` gets the first 20 bytes of the SHA-256 hash of the
-  composite public key, as `crypto/x509` does for other keys.
+  composite public key. This is the `crypto/x509` default, but `GODEBUG=x509sha256skid=0`, which
+  switches `crypto/x509` to SHA-1, has no effect on composite keys.
 
 Every certificate is signed, verified against the signer's public key and parsed before it is
 returned.
@@ -67,13 +72,18 @@ subjectKey, err := compositex509.ParsePKIXPublicKey(csr.RawSubjectPublicKeyInfo)
 
 `csr.PublicKey` is nil for a composite key, so always read it through `ParsePKIXPublicKey`.
 
+A key usage requested for a composite key follows the same rules as in a certificate. This applies
+to a key usage extension in `ExtraExtensions` and to one in an extensionRequest in the deprecated
+`Attributes` field, which `crypto/x509` encodes in preference.
+
 ## Revocation lists
 
 ```go
 der, err := compositex509.CreateRevocationList(rand.Reader, template, caCert, caKey)
 ```
 
-The composite signer must hold the key named in the issuer certificate.
+The signer must hold the issuer's key when the signer or the issuer key is composite.
+`crypto/x509` does not compare the signer with the issuer.
 
 ## Verifying chains
 

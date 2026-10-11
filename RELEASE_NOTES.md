@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.2.1] - 11 Oct 2026
+
+This release closes two gaps in the `compositex509` creation checks, returns the `crypto/x509` errors for keys in other formats and makes signing with an unusable key return an error instead of panicking. It also documents that composite keys work in **FIPS 140-3 mode** with Go Cryptographic Module v1.26.0 and corrects the documentation of the random source and of two differences from `crypto/x509`.
+
+### Signatures
+
+* **No panic for unusable keys** - `Sign` and `SignMessage` return an error for a nil or zero-value `PrivateKey`, as `Verify` and the `Marshal` functions already did. Before, they panicked.
+* **Random source** - The documentation now says that only the RSA-PSS component reads the random source passed to `Sign`. ECDSA reads it only with `GODEBUG=cryptocustomrand=1` and otherwise uses the system random source, as ML-DSA always does.
+
+### Certificates
+
+* **Issuer key check under a composite CA** - `CreateCertificate` and `CreateRevocationList` refuse a signer that does not hold the composite CA key, also when the signer and subject keys are ECDSA, RSA, Ed25519 or ML-DSA. Before, they returned a certificate or revocation list that no verifier accepts.
+* **Key usage in CSR `Attributes`** - `CreateCertificateRequest` applies the composite key usage rules to a key usage requested through the deprecated `Attributes` field. `crypto/x509` encodes that value in preference to `ExtraExtensions`, so a forbidden usage could reach the request.
+* **Errors for other key formats** - `compositex509.ParsePKIXPublicKey` and `compositex509.ParsePKCS8PrivateKey` return the `crypto/x509` error for PKCS #1 and SEC 1 input, which names the parser to use. Before, they returned a raw ASN.1 error.
+* **Nil key on every parse error** - `compositex509.ParsePKIXPublicKey` and `compositex509.ParsePKCS8PrivateKey` also return a nil key when `crypto/x509` fails on another key type. `crypto/x509` returns a non-nil interface holding a nil pointer for some inputs such as a short X25519 key. 0.2.0 passed that value on.
+* **Documented differences from `crypto/x509`** - A standard CA key cannot sign a composite subject key with SHA-1. A composite CA's generated `SubjectKeyId` always uses SHA-256 and ignores `GODEBUG=x509sha256skid=0`.
+* **Hierarchy example** - `examples/hierarchy` writes all six files or none, so a name conflict no longer leaves a new root key behind.
+
+### Known limitations
+
+* **FIPS mode needs module v1.26.0** - Composite keys work in FIPS 140-3 mode with the Go Cryptographic Module v1.26.0, which Go 1.27.2 selects with `GOFIPS140=inprocess`. Module v1.0.0, which `GOFIPS140=certified` selects, has no ML-DSA. The library itself is not FIPS validated.
+
 ## [0.2.0] - 9 Oct 2026
 
 This release adds a lookup by algorithm name, tightens PKCS #8 parsing and fixes the nil key returned by the `compositex509` parsers on errors. The library now needs **Go 1.27.2** or newer, which fixes standard library vulnerabilities found in Go 1.27.1.

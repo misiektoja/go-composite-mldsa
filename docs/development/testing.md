@@ -21,6 +21,16 @@ The `compositex509` tests build a composite hierarchy for every algorithm, mixed
 ECDSA, RSA, RSA-PSS, Ed25519 and ML-DSA issuers, remote and faulty signers. They also cover the
 cases that must be refused.
 
+## FIPS 140-3 mode
+
+```bash
+make test-fips
+```
+
+Runs the tests with `GODEBUG=fips140=on` and the Go Cryptographic Module that `FIPS_MODULE` names,
+v1.26.0 by default. CI runs it on every push. Module v1.0.0 has no ML-DSA, so the tests fail with
+it.
+
 ## Fuzzing
 
 ```bash

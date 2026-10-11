@@ -16,8 +16,8 @@ algorithms. For each one it checks that:
 
 ## Bouncy Castle
 
-`make test-interop` exchanges artifacts with Bouncy Castle in both directions for all 15
-algorithms. Release 0.1.0 was tested with Bouncy Castle 1.86.
+`make test-interop` exchanges artifacts with Bouncy Castle 1.86 in both directions for all 15
+algorithms.
 
 | Direction | Checked |
 | --- | --- |
