@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## [0.2.1] - TBD
+## [0.2.1] - 11 Oct 2026
 
 This release closes two gaps in the `compositex509` creation checks, returns the `crypto/x509` errors for keys in other formats and makes signing with an unusable key return an error instead of panicking. It also documents that composite keys work in **FIPS 140-3 mode** with Go Cryptographic Module v1.26.0 and corrects the documentation of the random source and of two differences from `crypto/x509`.
 
