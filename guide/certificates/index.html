@@ -1178,13 +1178,18 @@ composite key is involved, so one code path serves every key type.</p>
 <ul>
 <li><code>template.SignatureAlgorithm</code> must be zero when the CA key is composite. The algorithm follows
   from the key.</li>
+<li>The signer must hold the key of a composite CA certificate, whatever the subject key is.
+  <code>crypto/x509</code> leaves that key nil and so cannot compare it with the signer.</li>
 <li>A composite subject key may only sign. Its key usage must include at least one of
   <code>DigitalSignature</code>, <code>ContentCommitment</code>, <code>CertSign</code> or <code>CRLSign</code>. It must not include
   <code>KeyEncipherment</code>, <code>DataEncipherment</code>, <code>KeyAgreement</code>, <code>EncipherOnly</code> or <code>DecipherOnly</code>, as
   section 5.2 of the draft requires. A key usage extension in <code>ExtraExtensions</code> is checked the
   same way.</li>
+<li>A standard CA key cannot sign a composite subject key with <code>SHA1WithRSA</code> or <code>ECDSAWithSHA1</code>.
+  <code>crypto/x509</code> still allows both.</li>
 <li>A CA certificate without <code>SubjectKeyId</code> gets the first 20 bytes of the SHA-256 hash of the
-  composite public key, as <code>crypto/x509</code> does for other keys.</li>
+  composite public key. This is the <code>crypto/x509</code> default, but <code>GODEBUG=x509sha256skid=0</code>, which
+  switches <code>crypto/x509</code> to SHA-1, has no effect on composite keys.</li>
 </ul>
 <p>Every certificate is signed, verified against the signer's public key and parsed before it is
 returned.</p>
@@ -1205,10 +1210,14 @@ returned.</p>
 <span class="nx">subjectKey</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">compositex509</span><span class="p">.</span><span class="nx">ParsePKIXPublicKey</span><span class="p">(</span><span class="nx">csr</span><span class="p">.</span><span class="nx">RawSubjectPublicKeyInfo</span><span class="p">)</span>
 </code></pre></div>
 <p><code>csr.PublicKey</code> is nil for a composite key, so always read it through <code>ParsePKIXPublicKey</code>.</p>
+<p>A key usage requested for a composite key follows the same rules as in a certificate. This applies
+to a key usage extension in <code>ExtraExtensions</code> and to one in an extensionRequest in the deprecated
+<code>Attributes</code> field, which <code>crypto/x509</code> encodes in preference.</p>
 <h2 id="revocation-lists">Revocation lists<a class="headerlink" href="#revocation-lists" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="nx">der</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">compositex509</span><span class="p">.</span><span class="nx">CreateRevocationList</span><span class="p">(</span><span class="nx">rand</span><span class="p">.</span><span class="nx">Reader</span><span class="p">,</span><span class="w"> </span><span class="nx">template</span><span class="p">,</span><span class="w"> </span><span class="nx">caCert</span><span class="p">,</span><span class="w"> </span><span class="nx">caKey</span><span class="p">)</span>
 </code></pre></div>
-<p>The composite signer must hold the key named in the issuer certificate.</p>
+<p>The signer must hold the issuer's key when the signer or the issuer key is composite.
+<code>crypto/x509</code> does not compare the signer with the issuer.</p>
 <h2 id="verifying-chains">Verifying chains<a class="headerlink" href="#verifying-chains" title="Permanent link">&para;</a></h2>
 <p><code>x509.Certificate.Verify</code> cannot follow a composite signature, so chain building through a
 composite certificate fails. Check each link with <code>CheckSignatureFrom</code>, which applies the same

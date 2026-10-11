@@ -1125,8 +1125,11 @@ neither part can be reused as a signature over the original message.</p>
 <span class="p">}</span>
 <span class="nx">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">compositemldsa</span><span class="p">.</span><span class="nx">Verify</span><span class="p">(</span><span class="nx">key</span><span class="p">.</span><span class="nx">PublicKey</span><span class="p">(),</span><span class="w"> </span><span class="nx">message</span><span class="p">,</span><span class="w"> </span><span class="nx">signature</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span>
 </code></pre></div>
-<p><code>Verify</code> returns nil only when both component signatures are valid. The random source passed to
-<code>Sign</code> is used by the ECDSA and RSA-PSS components. A nil reader selects <code>crypto/rand</code>.</p>
+<p><code>Verify</code> returns nil only when both component signatures are valid.</p>
+<p>The RSA-PSS component reads the random source passed to <code>Sign</code>. ECDSA reads it only with
+<code>GODEBUG=cryptocustomrand=1</code> and otherwise uses the system random source, as ML-DSA always does.
+RSA PKCS #1 v1.5 and Ed25519 signatures need no randomness. A nil reader selects <code>crypto/rand</code>.
+Tests that need repeatable randomness can use <code>testing/cryptotest.SetGlobalRandom</code>.</p>
 <h2 id="contexts">Contexts<a class="headerlink" href="#contexts" title="Permanent link">&para;</a></h2>
 <p>A context string binds a signature to one application. A signature made with one context does not
 verify with another, including the empty one.</p>

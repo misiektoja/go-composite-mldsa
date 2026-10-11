@@ -1168,7 +1168,8 @@ vectors byte for byte.</p>
 </code></pre></div>
 <p><code>MarshalPKCS8PrivateKey</code> writes a version 0 <code>PrivateKeyInfo</code>. <code>ParsePKCS8PrivateKey</code> also accepts
 a version 1 <code>OneAsymmetricKey</code> and checks that an included public key matches the private key.
-Attributes must be well formed and are discarded.</p>
+Attributes must form a well-formed SET OF Attribute and are discarded. Their values are checked for
+structure but not for DER encoding, since their types are unknown.</p>
 <h2 id="keys-of-any-type">Keys of any type<a class="headerlink" href="#keys-of-any-type" title="Permanent link">&para;</a></h2>
 <p><code>compositex509.ParsePKIXPublicKey</code>, <code>MarshalPKIXPublicKey</code>, <code>ParsePKCS8PrivateKey</code> and
 <code>MarshalPKCS8PrivateKey</code> work like their <code>crypto/x509</code> counterparts and also handle composite keys.

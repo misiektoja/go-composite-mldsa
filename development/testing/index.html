@@ -899,6 +899,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fips-140-3-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FIPS 140-3 mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fuzzing" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1029,6 +1040,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fips-140-3-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FIPS 140-3 mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fuzzing" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1086,6 +1108,12 @@ label separation between algorithms and malformed keys.</p>
 <p>The <code>compositex509</code> tests build a composite hierarchy for every algorithm, mixed hierarchies with
 ECDSA, RSA, RSA-PSS, Ed25519 and ML-DSA issuers, remote and faulty signers. They also cover the
 cases that must be refused.</p>
+<h2 id="fips-140-3-mode">FIPS 140-3 mode<a class="headerlink" href="#fips-140-3-mode" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>test-fips
+</code></pre></div>
+<p>Runs the tests with <code>GODEBUG=fips140=on</code> and the Go Cryptographic Module that <code>FIPS_MODULE</code> names,
+v1.26.0 by default. CI runs it on every push. Module v1.0.0 has no ML-DSA, so the tests fail with
+it.</p>
 <h2 id="fuzzing">Fuzzing<a class="headerlink" href="#fuzzing" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>make<span class="w"> </span>fuzz
 make<span class="w"> </span>fuzz<span class="w"> </span><span class="nv">FUZZ_TIME</span><span class="o">=</span>2m

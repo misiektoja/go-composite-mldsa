@@ -1183,7 +1183,10 @@ files and no hardware module integration. A remote signer that implements <code>
 with <code>compositex509</code>.</p>
 <h2 id="fips-mode">FIPS mode<a class="headerlink" href="#fips-mode" title="Permanent link">&para;</a></h2>
 <p>The FIPS 140-3 Go Cryptographic Module v1.0.0 has no ML-DSA, so composite keys cannot be generated,
-loaded or verified in that mode.</p>
+loaded or verified with it. <code>GOFIPS140=certified</code> selects that module in Go 1.27.2.</p>
+<p>Module v1.26.0 includes ML-DSA and the tests pass with it in FIPS mode. Go 1.27.2 lists it as in
+process of validation and selects it with <code>GOFIPS140=inprocess</code> or <code>GOFIPS140=v1.26.0</code>. The library
+itself is not FIPS validated.</p>
 
 
 
