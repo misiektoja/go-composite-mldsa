@@ -90,6 +90,9 @@ jobs:
           name: site
           path: site
 
+      # The token reaches git as an Authorization header set on the command line, the way
+      # actions/checkout passes it, so it is never written into the remote URL or the repository
+      # configuration of the published checkout.
       - name: Fetch the published branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -97,9 +100,9 @@ jobs:
           # Building the branch in a fresh directory handles the first run, where gh-pages does not
           # exist yet, through the same code path as an update.
           git init -q -b gh-pages published
-          git -C published remote add origin \
-            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          if git -C published fetch -q --depth 1 origin gh-pages; then
+          git -C published remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+          if git -C published -c "http.https://github.com/.extraheader=${auth}" fetch -q --depth 1 origin gh-pages; then
             git -C published reset -q --hard FETCH_HEAD
             echo "gh-pages exists, replacing the site on it"
           else
@@ -118,6 +121,8 @@ jobs:
           touch published/.nojekyll
 
       - name: Publish the site
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git -C published add -A
           if git -C published diff --quiet --cached; then
@@ -128,7 +133,8 @@ jobs:
             -c user.name="github-actions[bot]" \
             -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -q -m "Publish the documentation for ${GITHUB_SHA}"
-          git -C published push origin gh-pages
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+          git -C published -c "http.https://github.com/.extraheader=${auth}" push origin gh-pages
 
       - name: Report the site URL
         run: |
