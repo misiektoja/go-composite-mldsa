@@ -11,5 +11,6 @@ for testing and documentation only.
 | MkDocs, Material for MkDocs and PyMdown Extensions | Documentation site build | BSD-2-Clause, MIT and MIT |
 
 The Bouncy Castle jars are pinned by version and SHA-256 digest in the `Makefile` and are not
-redistributed. The documentation toolchain is pinned in `docs/requirements.txt`. Each dependency
-retains its own license and notices.
+redistributed. The documentation toolchain is pinned by version and SHA-256 hash in
+`docs/requirements.txt`, compiled from `docs/requirements.in`. Each dependency retains its own
+license and notices.
