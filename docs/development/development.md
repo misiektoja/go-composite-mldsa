@@ -11,7 +11,7 @@ How to build, check and change the library. Contribution rules are in
   least Java 16 for the APIs it uses, but versions before 27 are not tested. See
   [Testing](testing.md).
 * Python 3 with the pinned MkDocs dependencies for the documentation site, installed by
-  `make docs-deps`.
+  `make docs-deps`. CI uses Python 3.13.
 
 Linters and other tools are downloaded into `bin/` at pinned versions by the Make targets that
 need them.
@@ -56,7 +56,15 @@ make docs-serve PYTHON=.venv/bin/python
 
 `make docs-build` runs with `--strict`, so a broken link, a missing anchor or a page absent from
 the navigation fails the build. CI runs the same build on every change to the documentation and
-publishes the site from the default branch.
+publishes the site from the default branch. The build runs with a read-only token and hands the
+site to a separate publish job as an artifact, so the only job that can write to the repository
+runs no code from PyPI or from the checkout.
+
+`docs/requirements.txt` pins every package, including the transitive ones, by version and SHA-256
+hash, and `make docs-deps` installs it with `--require-hashes`. To change a direct dependency, edit
+`docs/requirements.in` and run `make docs-pin`, which needs
+[pip-tools](https://pypi.org/project/pip-tools/) in the `PYTHON` environment. Dependabot updates
+the compiled file the same way.
 
 Package documentation on [pkg.go.dev](https://pkg.go.dev/github.com/misiektoja/go-composite-mldsa)
 comes from the Go doc comments. User-facing behavior changes belong in both places. The example on

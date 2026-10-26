@@ -23,8 +23,9 @@ therefore does not yield a signature over the original message.
 
 * `Verify` fails unless both components verify. There is no mode that accepts one component.
 * Parsing accepts only the encodings the draft fixes. Wrong sizes, algorithm parameters, RSA moduli
-  of another size, points on another curve, non-canonical component encodings and trailing data
-  are rejected. [Keys and encodings](../guide/keys.md#strict-parsing) lists the rules.
+  of another size, RSA exponents that `crypto/rsa` cannot verify with, points on another curve,
+  non-canonical component encodings and trailing data are rejected.
+  [Keys and encodings](../guide/keys.md#strict-parsing) lists the rules.
 * A PKCS #8 key that includes its public key must match the private key.
 * `compositex509` verifies every signature it creates before returning the certificate, request or
   revocation list, including signatures from remote signers.

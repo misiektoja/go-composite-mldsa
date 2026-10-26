@@ -75,6 +75,8 @@ Parsing rejects anything the draft does not allow:
 * algorithm identifiers with parameters
 * keys of the wrong length for the algorithm
 * RSA keys whose modulus is not exactly the size the algorithm names
+* RSA public keys whose exponent is even, below 3 or above 2^31-1, which `crypto/rsa` never
+  verifies with
 * ECDSA points that are not on the algorithm's curve
 * traditional keys in any encoding other than the single DER form section 4 of the draft fixes,
   such as an ECDSA private key that carries its public key

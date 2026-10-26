@@ -1,0 +1,59 @@
+name: Fuzzing
+
+on:
+  workflow_dispatch:
+  schedule:
+    # A weekly run fuzzes each target for minutes instead of the 30 seconds a push gets.
+    - cron: "53 5 * * 1"
+
+permissions: {}
+
+# A manual run waits for a run in progress instead of discarding its fuzzing time.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fuzz:
+    permissions:
+      contents: read
+    name: Extended fuzzing
+    runs-on: ubuntu-latest
+    # The targets run in turn, so the limit must cover FUZZ_TIME for every target in FUZZ_TARGETS
+    # plus building each instrumented test binary.
+    timeout-minutes: 60
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.mod
+
+      # The Makefile disables input minimization because a worker still minimizing when the budget
+      # expires makes Go fail the run with "context deadline exceeded" (golang/go#75804).
+      - name: Fuzz the parsers and the verifier
+        run: make fuzz FUZZ_TIME=5m
+
+      # Go writes a crashing input under the package's testdata/fuzz directory on the runner. Only
+      # inputs that are not committed are kept.
+      - name: Collect the failing inputs
+        if: failure()
+        run: |
+          mkdir -p "$RUNNER_TEMP/fuzz-failures"
+          git ls-files --others --exclude-standard -z -- '*testdata/fuzz/*' | xargs -0 -r cp --parents -t "$RUNNER_TEMP/fuzz-failures"
+
+      # Artifacts of a public repository can be downloaded by any signed-in GitHub user, so the
+      # reproducer is kept only long enough to replay it with go test -run.
+      - name: Keep the failing inputs with the run
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-failures
+          path: ${{ runner.temp }}/fuzz-failures/
+          if-no-files-found: ignore
+          retention-days: 7

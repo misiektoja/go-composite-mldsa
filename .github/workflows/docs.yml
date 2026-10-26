@@ -3,6 +3,10 @@
 # The site is served from the `gh-pages` branch. Every push and pull request that touches the
 # documentation runs the strict build, so a broken link or a page missing from the navigation is
 # reported before it reaches the default branch. Only the default branch publishes.
+#
+# The build job installs the MkDocs toolchain from PyPI and runs it, so it holds a read-only token.
+# The publish job holds the only write token and runs no third-party code: it receives the built
+# site as an artifact of the same run and pushes it with git alone.
 name: Documentation
 
 on:
@@ -42,15 +46,27 @@ jobs:
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
 
+      # Every package, including the transitive ones, is pinned by version and hash in
+      # docs/requirements.txt, so a changed upstream file fails the install instead of running.
       - name: Install the documentation dependencies
         run: make docs-deps
 
       - name: Build the documentation
         run: make docs-build
+
+      # Only a run that will publish keeps the site. A pull request stops at the strict build.
+      - name: Keep the built site for the publish job
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site
+          path: site
+          if-no-files-found: error
+          retention-days: 1
 
   publish:
     name: Publish to GitHub Pages
@@ -66,22 +82,17 @@ jobs:
       group: gh-pages
       cancel-in-progress: false
     steps:
-      - name: Clone the code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The site was built by the read-only job of this same run. Nothing from the repository and
+      # nothing from PyPI runs here.
+      - name: Download the built site
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          persist-credentials: false
+          name: site
+          path: site
 
-      - name: Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.13"
-
-      - name: Install the documentation dependencies
-        run: make docs-deps
-
-      - name: Build the documentation
-        run: make docs-build
-
+      # The token reaches git as an Authorization header set on the command line, the way
+      # actions/checkout passes it, so it is never written into the remote URL or the repository
+      # configuration of the published checkout.
       - name: Fetch the published branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -89,9 +100,9 @@ jobs:
           # Building the branch in a fresh directory handles the first run, where gh-pages does not
           # exist yet, through the same code path as an update.
           git init -q -b gh-pages published
-          git -C published remote add origin \
-            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          if git -C published fetch -q --depth 1 origin gh-pages; then
+          git -C published remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+          if git -C published -c "http.https://github.com/.extraheader=${auth}" fetch -q --depth 1 origin gh-pages; then
             git -C published reset -q --hard FETCH_HEAD
             echo "gh-pages exists, replacing the site on it"
           else
@@ -110,6 +121,8 @@ jobs:
           touch published/.nojekyll
 
       - name: Publish the site
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git -C published add -A
           if git -C published diff --quiet --cached; then
@@ -120,7 +133,8 @@ jobs:
             -c user.name="github-actions[bot]" \
             -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -q -m "Publish the documentation for ${GITHUB_SHA}"
-          git -C published push origin gh-pages
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+          git -C published -c "http.https://github.com/.extraheader=${auth}" push origin gh-pages
 
       - name: Report the site URL
         run: |

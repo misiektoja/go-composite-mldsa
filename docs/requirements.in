@@ -1,0 +1,5 @@
+# Direct documentation build dependencies. docs/requirements.txt is compiled from this file with
+# hashes for every package, see the docs-pin Make target.
+mkdocs==1.6.1
+mkdocs-material==9.7.7
+pymdown-extensions==12.3
