@@ -225,6 +225,9 @@ func parseTraditionalPublicKey(d *details, der []byte) (crypto.PublicKey, error)
 		if k.N.BitLen() != d.rsaBits {
 			return nil, fmt.Errorf("RSA modulus has %d bits, want %d", k.N.BitLen(), d.rsaBits)
 		}
+		if !usableRSAExponent(k.E) {
+			return nil, fmt.Errorf("RSA public exponent %d is not an odd number between 3 and 2^31-1", k.E)
+		}
 		if !bytes.Equal(x509.MarshalPKCS1PublicKey(k), der) {
 			return nil, errors.New("RSA public key is not DER encoded")
 		}
@@ -239,6 +242,14 @@ func parseTraditionalPublicKey(d *details, der []byte) (crypto.PublicKey, error)
 	default:
 		return nil, errUnknownAlgorithm
 	}
+}
+
+// Reports whether crypto/rsa verifies signatures under the public exponent e. crypto/rsa refuses an
+// exponent that is even, below 2 or above 2^31-1, so a key with such an exponent can never verify a
+// signature. Rejecting it here reports the unusable key where it is parsed, for example when a
+// certificate authority reads a request, instead of as an invalid signature later.
+func usableRSAExponent(e int) bool {
+	return e >= 3 && e&1 == 1 && e <= 1<<31-1
 }
 
 // RFC 5915 ECPrivateKey without the publicKey field, as section 4 of the draft requires.
