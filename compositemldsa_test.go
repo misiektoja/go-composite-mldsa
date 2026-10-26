@@ -13,6 +13,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"math/big"
 	"strings"
 	"testing"
 
@@ -393,6 +394,49 @@ func TestParseRejectsMalformedKeys(t *testing.T) {
 		if _, err := compositemldsa.NewPrivateKey(c.alg, c.priv); err == nil {
 			t.Errorf("NewPrivateKey accepted %s", c.name)
 		}
+	}
+}
+
+// crypto/rsa never verifies under an even exponent, one below 2 or one above 2^31-1, so such keys
+// are rejected when parsed rather than when a signature fails.
+func TestParseRejectsUnusableRSAExponents(t *testing.T) {
+	alg := compositemldsa.MLDSA44RSA2048PKCS15SHA256
+	sk := vectorKey(t, alg)
+	rsaPub := sk.PublicKey().TraditionalPublicKey().(*rsa.PublicKey)
+	mldsaBytes := sk.PublicKey().MLDSAPublicKey().Bytes()
+	for _, e := range []int{1, 2, 4, 65536, 1 << 31} {
+		pub := append(bytes.Clone(mldsaBytes), x509.MarshalPKCS1PublicKey(&rsa.PublicKey{N: rsaPub.N, E: e})...)
+		if _, err := compositemldsa.NewPublicKey(alg, pub); err == nil {
+			t.Errorf("NewPublicKey accepted the RSA exponent %d", e)
+		} else if !strings.Contains(err.Error(), "exponent") {
+			t.Errorf("NewPublicKey rejected the RSA exponent %d for another reason: %v", e, err)
+		}
+	}
+	for _, e := range []int{3, 65537, 1<<31 - 1} {
+		pub := append(bytes.Clone(mldsaBytes), x509.MarshalPKCS1PublicKey(&rsa.PublicKey{N: rsaPub.N, E: e})...)
+		if _, err := compositemldsa.NewPublicKey(alg, pub); err != nil {
+			t.Errorf("NewPublicKey rejected the RSA exponent %d: %v", e, err)
+		}
+	}
+
+	// An RSAPrivateKey with e = d = 1 is arithmetically consistent, so only an exponent check can
+	// reject it. crypto/x509 validates private keys with crypto/rsa, which applies that check.
+	rsaPriv := sk.Bytes()[32:]
+	var raw struct {
+		Version       int
+		N, E, D, P, Q *big.Int
+		Dp, Dq, Qinv  *big.Int
+	}
+	if _, err := asn1.Unmarshal(rsaPriv, &raw); err != nil {
+		t.Fatal(err)
+	}
+	raw.E, raw.D, raw.Dp, raw.Dq = big.NewInt(1), big.NewInt(1), big.NewInt(1), big.NewInt(1)
+	weak, err := asn1.Marshal(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := compositemldsa.NewPrivateKey(alg, append(bytes.Clone(sk.Bytes()[:32]), weak...)); err == nil {
+		t.Error("NewPrivateKey accepted an RSA private key with exponent 1")
 	}
 }
 
