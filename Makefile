@@ -114,9 +114,15 @@ fuzz: ## Fuzz every parsing target for FUZZ_TIME each. Failing inputs are saved 
 # PYTHON selects the interpreter that provides the MkDocs toolchain.
 PYTHON ?= python3
 
+# docs/requirements.txt pins every package by version and SHA-256 hash, so pip refuses a file that
+# differs from the one recorded, including a transitive dependency replaced upstream.
 .PHONY: docs-deps
-docs-deps: ## Install the pinned documentation build dependencies.
-	$(PYTHON) -m pip install -r docs/requirements.txt
+docs-deps: ## Install the hash-pinned documentation build dependencies.
+	$(PYTHON) -m pip install --require-hashes -r docs/requirements.txt
+
+.PHONY: docs-pin
+docs-pin: ## Recompile docs/requirements.txt with hashes from docs/requirements.in. Needs pip-tools.
+	cd docs && $(PYTHON) -m piptools compile --generate-hashes --strip-extras --output-file=requirements.txt requirements.in
 
 .PHONY: docs-build
 docs-build: ## Build the documentation site into site/ and fail on any warning.
