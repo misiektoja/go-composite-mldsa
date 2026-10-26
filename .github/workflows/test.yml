@@ -69,8 +69,8 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.mod
 
-      # A short budget keeps the job mandatory. Longer runs remain a local task. The Makefile
-      # disables input minimization because a worker still minimizing when the budget expires makes
-      # Go fail the run with "context deadline exceeded" (golang/go#75804).
+      # A short budget keeps the job mandatory. The Fuzzing workflow runs longer each week. The
+      # Makefile disables input minimization because a worker still minimizing when the budget
+      # expires makes Go fail the run with "context deadline exceeded" (golang/go#75804).
       - name: Fuzz the parsers and the verifier
         run: make fuzz FUZZ_TIME=30s
