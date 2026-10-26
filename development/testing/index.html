@@ -1119,8 +1119,12 @@ it.</p>
 make<span class="w"> </span>fuzz<span class="w"> </span><span class="nv">FUZZ_TIME</span><span class="o">=</span>2m
 </code></pre></div>
 <p>Fuzzes public key and PKCS #8 parsing, signature verification and certificate signature checks for
-<code>FUZZ_TIME</code> each. CI runs 30 seconds per target on every push. Go writes a failing input under the
+<code>FUZZ_TIME</code> each. CI runs 30 seconds per target on every push. The Fuzzing workflow runs 5 minutes
+per target every week and can also be started by hand. Go writes a failing input under the
 package's <code>testdata/fuzz</code> directory. Commit that input with the fix so it stays a regression test.</p>
+<p>When the weekly run fails, it keeps the failing input as the <code>fuzz-failures</code> artifact for 7 days.
+Extract it at the repository root and run the <code>go test -run</code> command from the log in the failing
+package.</p>
 <p>The target passes <code>-fuzzminimizetime 0</code>, so Go does not minimize inputs. Minimization stalls the
 workers for seconds at a time and a worker that is still busy when <code>FUZZ_TIME</code> expires makes Go
 report the run as failed with <code>context deadline exceeded</code>. Set <code>FUZZ_MINIMIZE_TIME</code> to a duration

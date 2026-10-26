@@ -1147,7 +1147,7 @@
   least Java 16 for the APIs it uses, but versions before 27 are not tested. See
   <a href="../testing/">Testing</a>.</li>
 <li>Python 3 with the pinned MkDocs dependencies for the documentation site, installed by
-  <code>make docs-deps</code>.</li>
+  <code>make docs-deps</code>. CI uses Python 3.13.</li>
 </ul>
 <p>Linters and other tools are downloaded into <code>bin/</code> at pinned versions by the Make targets that
 need them.</p>
@@ -1207,7 +1207,14 @@ make<span class="w"> </span>docs-serve<span class="w"> </span><span class="nv">P
 </code></pre></div>
 <p><code>make docs-build</code> runs with <code>--strict</code>, so a broken link, a missing anchor or a page absent from
 the navigation fails the build. CI runs the same build on every change to the documentation and
-publishes the site from the default branch.</p>
+publishes the site from the default branch. The build runs with a read-only token and hands the
+site to a separate publish job as an artifact, so the only job that can write to the repository
+runs no code from PyPI or from the checkout.</p>
+<p><code>docs/requirements.txt</code> pins every package, including the transitive ones, by version and SHA-256
+hash, and <code>make docs-deps</code> installs it with <code>--require-hashes</code>. To change a direct dependency, edit
+<code>docs/requirements.in</code> and run <code>make docs-pin</code>, which needs
+<a href="https://pypi.org/project/pip-tools/">pip-tools</a> in the <code>PYTHON</code> environment. Dependabot updates
+the compiled file the same way.</p>
 <p>Package documentation on <a href="https://pkg.go.dev/github.com/misiektoja/go-composite-mldsa">pkg.go.dev</a>
 comes from the Go doc comments. User-facing behavior changes belong in both places. The example on
 <a href="../../getting-started/">Getting started</a> is included from <code>examples/hierarchy</code>, so change the

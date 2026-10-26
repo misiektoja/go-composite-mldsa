@@ -1193,6 +1193,8 @@ Use them where a program reads keys of several types:</p>
 <li>algorithm identifiers with parameters</li>
 <li>keys of the wrong length for the algorithm</li>
 <li>RSA keys whose modulus is not exactly the size the algorithm names</li>
+<li>RSA public keys whose exponent is even, below 3 or above 2^31-1, which <code>crypto/rsa</code> never
+  verifies with</li>
 <li>ECDSA points that are not on the algorithm's curve</li>
 <li>traditional keys in any encoding other than the single DER form section 4 of the draft fixes,
   such as an ECDSA private key that carries its public key</li>
