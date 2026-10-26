@@ -3,6 +3,10 @@
 # The site is served from the `gh-pages` branch. Every push and pull request that touches the
 # documentation runs the strict build, so a broken link or a page missing from the navigation is
 # reported before it reaches the default branch. Only the default branch publishes.
+#
+# The build job installs the MkDocs toolchain from PyPI and runs it, so it holds a read-only token.
+# The publish job holds the only write token and runs no third-party code: it receives the built
+# site as an artifact of the same run and pushes it with git alone.
 name: Documentation
 
 on:
@@ -46,11 +50,23 @@ jobs:
         with:
           python-version: "3.13"
 
+      # Every package, including the transitive ones, is pinned by version and hash in
+      # docs/requirements.txt, so a changed upstream file fails the install instead of running.
       - name: Install the documentation dependencies
         run: make docs-deps
 
       - name: Build the documentation
         run: make docs-build
+
+      # Only a run that will publish keeps the site. A pull request stops at the strict build.
+      - name: Keep the built site for the publish job
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site
+          path: site
+          if-no-files-found: error
+          retention-days: 1
 
   publish:
     name: Publish to GitHub Pages
@@ -66,21 +82,13 @@ jobs:
       group: gh-pages
       cancel-in-progress: false
     steps:
-      - name: Clone the code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The site was built by the read-only job of this same run. Nothing from the repository and
+      # nothing from PyPI runs here.
+      - name: Download the built site
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          persist-credentials: false
-
-      - name: Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.13"
-
-      - name: Install the documentation dependencies
-        run: make docs-deps
-
-      - name: Build the documentation
-        run: make docs-build
+          name: site
+          path: site
 
       - name: Fetch the published branch
         env:
