@@ -30,6 +30,7 @@ The library has two packages and no dependencies outside the Go standard library
 * [Algorithms](#algorithms)
 * [Getting started](#getting-started)
 * [Documentation](#documentation)
+* [Limitations](#limitations)
 * [Support](#support)
 * [License](#license)
 
@@ -63,18 +64,6 @@ names, OIDs and sizes.
 
 Every supported algorithm passes the draft's published test vectors and exchanges keys,
 signatures, certificates, requests and revocation lists with Bouncy Castle in both directions.
-
-### Limitations
-
-* The draft is not yet an RFC. The library follows draft-19 exactly and a later draft or the RFC
-  may change the construction.
-* `x509.Certificate.Verify` cannot build chains through composite certificates. Check each link
-  with `compositex509.CheckSignatureFrom`.
-* OCSP responses, CMS and TLS are out of scope. The raw signing API covers any structure that
-  signs DER bytes under an algorithm identifier.
-
-[Known limitations](https://misiektoja.github.io/go-composite-mldsa/known-limitations/) explains
-each one.
 
 ## Getting started
 
@@ -115,6 +104,18 @@ Full documentation is at
 package documentation on
 [pkg.go.dev](https://pkg.go.dev/github.com/misiektoja/go-composite-mldsa) describes every exported
 identifier.
+
+## Limitations
+
+* The draft is not yet an RFC. The library follows draft-19 exactly and a later draft or the RFC
+  may change the construction.
+* `x509.Certificate.Verify` cannot build chains through composite certificates. Check each link
+  with `compositex509.CheckSignatureFrom`.
+* OCSP responses, CMS and TLS are out of scope. The raw signing API covers any structure that
+  signs DER bytes under an algorithm identifier.
+
+[Known limitations](https://misiektoja.github.io/go-composite-mldsa/known-limitations/) explains
+each one.
 
 ## Support
 
