@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## [0.2.2] - TBD
+## [0.2.2] - 26 Oct 2026
 
 This release rejects composite public keys whose RSA exponent `crypto/rsa` cannot verify with, so an unusable key is reported where it is parsed instead of as a failed signature later.
 
