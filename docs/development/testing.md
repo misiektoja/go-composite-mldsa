@@ -39,8 +39,13 @@ make fuzz FUZZ_TIME=2m
 ```
 
 Fuzzes public key and PKCS #8 parsing, signature verification and certificate signature checks for
-`FUZZ_TIME` each. CI runs 30 seconds per target on every push. Go writes a failing input under the
+`FUZZ_TIME` each. CI runs 30 seconds per target on every push. The Fuzzing workflow runs 5 minutes
+per target every week and can also be started by hand. Go writes a failing input under the
 package's `testdata/fuzz` directory. Commit that input with the fix so it stays a regression test.
+
+When the weekly run fails, it keeps the failing input as the `fuzz-failures` artifact for 7 days.
+Extract it at the repository root and run the `go test -run` command from the log in the failing
+package.
 
 The target passes `-fuzzminimizetime 0`, so Go does not minimize inputs. Minimization stalls the
 workers for seconds at a time and a worker that is still busy when `FUZZ_TIME` expires makes Go
