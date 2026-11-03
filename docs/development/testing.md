@@ -11,7 +11,8 @@ make test
 ```
 
 Runs `go vet` and every test under the race detector with coverage written to the scratch
-directory. The root package tests load the draft-19 test vectors for all 15 algorithms and check
+directory. CI uploads that profile to [Codecov](https://app.codecov.io/gh/misiektoja/go-composite-mldsa),
+which leaves out `examples/`. The root package tests load the draft-19 test vectors for all 15 algorithms and check
 encodings, signatures and the published certificates, as
 [Tested implementations](../interoperability/tested-implementations.md#draft-test-vectors)
 describes. Further tests cover signing options, context and pre-hash handling, tampered signatures,

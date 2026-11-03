@@ -4,6 +4,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/misiektoja/go-composite-mldsa.svg)](https://pkg.go.dev/github.com/misiektoja/go-composite-mldsa)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 [![Tests](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/test.yml)
+[![Coverage](https://codecov.io/gh/misiektoja/go-composite-mldsa/graph/badge.svg)](https://app.codecov.io/gh/misiektoja/go-composite-mldsa)
 [![Interoperability](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/interop.yml/badge.svg?branch=main)](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/interop.yml)
 [![Supply chain](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/supply-chain.yml/badge.svg?branch=main)](https://github.com/misiektoja/go-composite-mldsa/actions/workflows/supply-chain.yml)
 [![OpenSSF Scorecard](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.scorecard.dev%2Fprojects%2Fgithub.com%2Fmisiektoja%2Fgo-composite-mldsa&query=%24.score&label=openssf%20scorecard&style=flat-square)](https://scorecard.dev/viewer/?uri=github.com/misiektoja/go-composite-mldsa)
