@@ -1100,7 +1100,8 @@ it proves.</p>
 <div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nb">test</span>
 </code></pre></div>
 <p>Runs <code>go vet</code> and every test under the race detector with coverage written to the scratch
-directory. The root package tests load the draft-19 test vectors for all 15 algorithms and check
+directory. CI uploads that profile to <a href="https://app.codecov.io/gh/misiektoja/go-composite-mldsa">Codecov</a>,
+which leaves out <code>examples/</code>. The root package tests load the draft-19 test vectors for all 15 algorithms and check
 encodings, signatures and the published certificates, as
 <a href="../../interoperability/tested-implementations/#draft-test-vectors">Tested implementations</a>
 describes. Further tests cover signing options, context and pre-hash handling, tampered signatures,
