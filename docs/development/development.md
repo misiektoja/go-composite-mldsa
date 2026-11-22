@@ -1,3 +1,7 @@
+---
+description: "Build, check and change go-composite-mldsa: prerequisites, repository layout, Make targets, building the documentation site and code style."
+---
+
 # Development
 
 How to build, check and change the library. Contribution rules are in

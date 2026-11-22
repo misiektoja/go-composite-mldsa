@@ -1,3 +1,8 @@
+---
+title: "Composite ML-DSA signatures and certificates in Go"
+description: "go-composite-mldsa is a Go library for post-quantum composite ML-DSA signatures, keys and X.509 certificates per draft-ietf-lamps-pq-composite-sigs-19."
+---
+
 # go-composite-mldsa
 
 go-composite-mldsa is a Go library for **post-quantum composite ML-DSA** signatures as specified in

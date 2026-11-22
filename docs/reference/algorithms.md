@@ -1,3 +1,7 @@
+---
+description: "The 15 composite ML-DSA algorithms of draft-19 that go-composite-mldsa supports, with OIDs, pre-hash, components, key and signature sizes."
+---
+
 # Algorithms
 
 The library implements the 15 draft-19 algorithms whose components the Go standard library

@@ -1,3 +1,7 @@
+---
+description: "Create and verify X.509 certificates, certificate requests and CRLs with composite ML-DSA keys in Go using the compositex509 package."
+---
+
 # Certificates, requests and CRLs
 
 `crypto/x509` parses certificates, certificate requests and revocation lists that use composite

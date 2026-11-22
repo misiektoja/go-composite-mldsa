@@ -1,3 +1,7 @@
+---
+description: "Install go-composite-mldsa, sign and verify a message with a composite ML-DSA key and build a small X.509 certificate hierarchy in Go."
+---
+
 # Getting started
 
 This page signs a message with a composite key, then builds a small certificate hierarchy.

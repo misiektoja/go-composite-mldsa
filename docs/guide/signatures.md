@@ -1,3 +1,7 @@
+---
+description: "Sign and verify with composite ML-DSA keys in Go, including contexts, signing a digest, remote signers and the properties of a composite signature."
+---
+
 # Signatures
 
 A composite signature is the ML-DSA signature followed by the traditional signature. Both are

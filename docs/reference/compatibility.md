@@ -1,3 +1,7 @@
+---
+description: "Semantic versioning and draft compatibility policy of go-composite-mldsa, what counts as public API and how a change to the draft is released."
+---
+
 # Compatibility policy
 
 The module uses semantic versioning. The public API is every exported identifier of the root

@@ -1,3 +1,7 @@
+---
+description: "What go-composite-mldsa does not support: draft changes, Brainpool and Ed448 combinations, chain building, other protocols and FIPS mode."
+---
+
 # Known limitations
 
 ## The draft may still change

@@ -1,3 +1,7 @@
+---
+description: "What a composite ML-DSA signature protects against, what go-composite-mldsa checks, what the caller must do and the FIPS 140-3 position."
+---
+
 # Security model
 
 This page states what a composite signature protects against, what the library checks and what

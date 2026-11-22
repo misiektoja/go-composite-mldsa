@@ -1,3 +1,7 @@
+---
+description: "Generate composite ML-DSA keys in Go and encode them as raw bytes, PKIX and PKCS #8, with strict parsing and access to the key components."
+---
+
 # Keys and encodings
 
 A composite key pair is one ML-DSA key pair and one traditional key pair that are only ever used

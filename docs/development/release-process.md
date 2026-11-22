@@ -1,3 +1,7 @@
+---
+description: "How a go-composite-mldsa release is made: versioning, the steps from release notes to a version tag and the artifacts the release produces."
+---
+
 # Release process
 
 A release is started by pushing a version tag that is reachable from `main` and by nothing else.
